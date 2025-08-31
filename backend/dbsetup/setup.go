@@ -23,7 +23,7 @@ func main() {
 	systemConfig.BufferPoolSize = 1024 * 1024 * 50 // 50 MB buffer
 	db, err := kuzu.OpenDatabase(DB_PATH, systemConfig)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer db.Close()
 	log.Println("Database created")
@@ -31,7 +31,7 @@ func main() {
 	log.Println("Connecting to database...")
 	conn, err := kuzu.OpenConnection(db)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer conn.Close()
 	log.Println("Connected to database")
@@ -61,7 +61,7 @@ func main() {
 	for _, query := range queries {
 		queryResult, err := conn.Query(query)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		defer queryResult.Close()
 	}
