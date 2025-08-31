@@ -28,7 +28,7 @@ func (a *App) CloseDatabase() {
 
 func (a *App) Serve(port string) {
 	a.Services.Mux = http.NewServeMux()
-	api.RegisterHandlers(a.Services)
+	api.RegisterApiHandlers(a.Services)
 	log.Println("Listening on :" + port + "...")
 	panic(http.ListenAndServe(":"+port, a.Services.Mux))
 }

@@ -48,7 +48,7 @@ func main() {
 			birth_date DATE,
 			death_date DATE
 		)`,
-		`CREATE REL TABLE IS_PARENT(FROM Person TO Person)`,
+		`CREATE REL TABLE IS_PARENT(FROM Person TO Person, biological BOOL)`,
 		`CREATE REL TABLE IS_MARRIED(
 			FROM Person TO Person,
 			since DATE,
