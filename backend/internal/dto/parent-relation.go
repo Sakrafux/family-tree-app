@@ -3,9 +3,9 @@ package dto
 import "github.com/google/uuid"
 
 type ParentRelation struct {
-	ParentId   uuid.UUID
-	ChildId    uuid.UUID
-	Biological bool
+	ParentId uuid.UUID
+	ChildId  uuid.UUID
+	Adopted  *bool
 }
 
 func ParseParentRelation(data map[string]any) *ParentRelation {
@@ -13,7 +13,9 @@ func ParseParentRelation(data map[string]any) *ParentRelation {
 
 	parentRelation.ParentId, _ = data["ParentId"].(uuid.UUID)
 	parentRelation.ChildId, _ = data["ChildId"].(uuid.UUID)
-	parentRelation.Biological, _ = data["Biological"].(bool)
+	if adopted, ok := data["Adopted"].(bool); ok {
+		parentRelation.Adopted = &adopted
+	}
 
 	return parentRelation
 }

@@ -11,7 +11,8 @@ type Person struct {
 	FirstName *string
 	LastName  *string
 	BirthName *string
-	Gender    string
+	Gender    *string
+	Dead      *bool
 	BirthDate *time.Time
 	DeathDate *time.Time
 }
@@ -29,7 +30,12 @@ func ParsePerson(data map[string]any) *Person {
 	if birthName, ok := data["BirthName"].(string); ok {
 		person.BirthName = &birthName
 	}
-	person.Gender = data["Gender"].(string)
+	if gender, ok := data["Gender"].(string); ok {
+		person.Gender = &gender
+	}
+	if dead, ok := data["Dead"].(bool); ok {
+		person.Dead = &dead
+	}
 	if birthDate, ok := data["BirthDate"].(time.Time); ok {
 		person.BirthDate = &birthDate
 	}

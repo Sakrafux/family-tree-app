@@ -22,6 +22,7 @@ func main() {
 		log.Println("Database already exists")
 		os.Exit(0)
 	}
+	// TODO possibly extend this program to deal with migrations for future extensions
 
 	log.Println("Creating database...")
 	systemConfig := kuzu.DefaultSystemConfig()
@@ -51,10 +52,11 @@ func main() {
 			last_name STRING,
 			birth_name STRING,
 			gender STRING,
+			dead BOOLEAN,
 			birth_date DATE,
 			death_date DATE
 		)`,
-		`CREATE REL TABLE IS_PARENT(FROM Person TO Person, biological BOOL)`,
+		`CREATE REL TABLE IS_PARENT(FROM Person TO Person, adopted BOOLEAN)`,
 		`CREATE REL TABLE IS_MARRIED(
 			FROM Person TO Person,
 			since DATE,
