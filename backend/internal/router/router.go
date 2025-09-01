@@ -19,7 +19,7 @@ func RegisterRoutes(context *server.ApplicationContext) *AuthServeMux {
 	apiRouter.HandleFunc("GET /relations/parents", apiHandler.GetAllParentRelations)
 	apiRouter.HandleFunc("GET /graph/complete", apiHandler.GetCompleteGraphData, constants.AUTH_PERMISSION_ADMIN)
 
-	router.Handle("/api/", http.StripPrefix("/api", apiRouter), constants.AUTH_PERMISSION_READ)
+	router.Handle("/", apiRouter, constants.AUTH_PERMISSION_READ)
 
 	publicRouter := NewAuthServeMux()
 
@@ -29,5 +29,7 @@ func RegisterRoutes(context *server.ApplicationContext) *AuthServeMux {
 
 	router.Handle("/public/", http.StripPrefix("/public", publicRouter))
 
-	return router
+	routerWrapper := NewAuthServeMux()
+	routerWrapper.Handle("/api/", http.StripPrefix("/api", router))
+	return routerWrapper
 }
