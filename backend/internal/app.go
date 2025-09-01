@@ -4,31 +4,49 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Sakrafux/family-tree/backend/internal/api"
 	"github.com/Sakrafux/family-tree/backend/internal/db"
-	"github.com/Sakrafux/family-tree/backend/internal/services"
+	"github.com/Sakrafux/family-tree/backend/internal/middleware"
+	"github.com/Sakrafux/family-tree/backend/internal/router"
+	"github.com/Sakrafux/family-tree/backend/internal/server"
 )
 
 type App struct {
-	Services *services.Services
+	Context *server.ApplicationContext
+	Config  *server.Config
+	Server  *http.Server
 }
 
-func NewApp() *App {
-	return &App{Services: &services.Services{}}
+func NewApp(config *server.Config) *App {
+	return &App{Context: &server.ApplicationContext{}, Config: config}
 }
 
-func (a *App) ConnectToDatabase(path string) {
-	a.Services.Db, a.Services.Conn = db.ConnectToDatabase(path)
+func (app *App) Start() {
+	app.connectToDatabase(app.Config.DB_PATH)
+	defer app.closeDatabase()
+
+	app.Server = &http.Server{
+		Addr:    app.Config.PORT,
+		Handler: app.createRouter(),
+	}
+
+	log.Println("Listening on " + app.Config.PORT + "...")
+	panic(app.Server.ListenAndServe())
 }
 
-func (a *App) CloseDatabase() {
-	a.Services.Db.Close()
-	a.Services.Conn.Close()
+func (app *App) connectToDatabase(path string) {
+	app.Context.Db, app.Context.Conn = db.ConnectToDatabase(path)
 }
 
-func (a *App) Serve(port string) {
-	a.Services.Mux = http.NewServeMux()
-	api.RegisterApiHandlers(a.Services)
-	log.Println("Listening on :" + port + "...")
-	panic(http.ListenAndServe(":"+port, a.Services.Mux))
+func (app *App) closeDatabase() {
+	app.Context.Conn.Close()
+	app.Context.Db.Close()
+}
+
+func (app *App) createRouter() http.Handler {
+	stack := middleware.CreateStack(
+		middleware.Logging,
+		middleware.LoadUser,
+	)
+
+	return stack(router.RegisterRoutes(app.Context))
 }

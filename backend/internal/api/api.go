@@ -2,22 +2,14 @@ package api
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/Sakrafux/family-tree/backend/internal/db"
-	"github.com/Sakrafux/family-tree/backend/internal/services"
+	"github.com/Sakrafux/family-tree/backend/internal/server"
 )
 
-func RegisterApiHandlers(s *services.Services) {
-	apiMux := http.NewServeMux()
-
-	apiMux.HandleFunc("GET /nodes/persons", getAllPersons(s))
-	apiMux.HandleFunc("GET /relations/marriages", getAllMarriageRelations(s))
-	apiMux.HandleFunc("GET /relations/parents", getAllParentRelations(s))
-	apiMux.HandleFunc("GET /graph/complete", getCompleteGraphData(s))
-
-	s.Mux.Handle("/api/", http.StripPrefix("/api", apiMux))
+type Handler struct {
+	Context *server.ApplicationContext
 }
 
 func writeJson(w http.ResponseWriter, data any) {
@@ -32,68 +24,52 @@ func writeJson(w http.ResponseWriter, data any) {
 	}
 }
 
-func getCompleteGraphData(s *services.Services) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("GET /graph/complete")
-
-		persons, err := db.GetAllPersons(s.Conn)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		marriages, err := db.GetAllMarriageRelations(s.Conn)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		parents, err := db.GetAllParentRelations(s.Conn)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
-		container := map[string]any{
-			"persons":   persons,
-			"marriages": marriages,
-			"parents":   parents,
-		}
-
-		writeJson(w, container)
+func (h *Handler) GetCompleteGraphData(w http.ResponseWriter, r *http.Request) {
+	persons, err := db.GetAllPersons(h.Context.Conn)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	marriages, err := db.GetAllMarriageRelations(h.Context.Conn)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	parents, err := db.GetAllParentRelations(h.Context.Conn)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	container := map[string]any{
+		"persons":   persons,
+		"marriages": marriages,
+		"parents":   parents,
+	}
+
+	writeJson(w, container)
 }
 
-func getAllPersons(s *services.Services) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("GET /nodes/persons")
-
-		data, err := db.GetAllPersons(s.Conn)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
-		writeJson(w, data)
+func (h *Handler) GetAllPersons(w http.ResponseWriter, r *http.Request) {
+	data, err := db.GetAllPersons(h.Context.Conn)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	writeJson(w, data)
 }
 
-func getAllMarriageRelations(s *services.Services) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("GET /relations/marriages")
-
-		data, err := db.GetAllMarriageRelations(s.Conn)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
-		writeJson(w, data)
+func (h *Handler) GetAllMarriageRelations(w http.ResponseWriter, r *http.Request) {
+	data, err := db.GetAllMarriageRelations(h.Context.Conn)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	writeJson(w, data)
 }
 
-func getAllParentRelations(s *services.Services) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("GET /relations/parents")
-
-		data, err := db.GetAllParentRelations(s.Conn)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
-		writeJson(w, data)
+func (h *Handler) GetAllParentRelations(w http.ResponseWriter, r *http.Request) {
+	data, err := db.GetAllParentRelations(h.Context.Conn)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	writeJson(w, data)
 }

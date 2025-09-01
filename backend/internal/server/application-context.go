@@ -1,13 +1,10 @@
-package services
+package server
 
 import (
-	"net/http"
-
 	"github.com/kuzudb/go-kuzu"
 )
 
-type Services struct {
+type ApplicationContext struct {
 	Db   *kuzu.Database
 	Conn *kuzu.Connection
-	Mux  *http.ServeMux
 }
