@@ -31,5 +31,6 @@ func RegisterRoutes(context *server.ApplicationContext) *AuthServeMux {
 
 	routerWrapper := NewAuthServeMux()
 	routerWrapper.Handle("/api/", http.StripPrefix("/api", router))
+	routerWrapper.Handle("/", http.FileServer(http.Dir("./frontend")))
 	return routerWrapper
 }

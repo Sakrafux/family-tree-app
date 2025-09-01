@@ -1,0 +1,28 @@
+version: "3.9"
+name: family-tree
+
+services:
+  db-setup:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+      target: db-setup
+    volumes:
+      - db-data:/app/db
+    # Only run once
+    restart: "no"
+
+  webserver:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+      target: webserver
+    depends_on:
+      - db-setup
+    ports:
+      - "8080:8080"
+    volumes:
+      - db-data:/app/db
+
+volumes:
+  db-data:
