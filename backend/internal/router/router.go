@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Sakrafux/family-tree/backend/internal/api"
+	"github.com/Sakrafux/family-tree/backend/internal/constants"
 	"github.com/Sakrafux/family-tree/backend/internal/server"
 )
 
@@ -16,9 +17,9 @@ func RegisterRoutes(context *server.ApplicationContext) *AuthServeMux {
 	apiRouter.HandleFunc("GET /nodes/persons", apiHandler.GetAllPersons)
 	apiRouter.HandleFunc("GET /relations/marriages", apiHandler.GetAllMarriageRelations)
 	apiRouter.HandleFunc("GET /relations/parents", apiHandler.GetAllParentRelations)
-	apiRouter.HandleFunc("GET /graph/complete", apiHandler.GetCompleteGraphData, "ADMIN")
+	apiRouter.HandleFunc("GET /graph/complete", apiHandler.GetCompleteGraphData, constants.AUTH_PERMISSION_ADMIN)
 
-	router.Handle("/api/", http.StripPrefix("/api", apiRouter), "READ")
+	router.Handle("/api/", http.StripPrefix("/api", apiRouter), constants.AUTH_PERMISSION_READ)
 
 	publicRouter := NewAuthServeMux()
 

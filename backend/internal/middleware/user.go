@@ -3,6 +3,8 @@ package middleware
 import (
 	"context"
 	"net/http"
+
+	"github.com/Sakrafux/family-tree/backend/internal/constants"
 )
 
 func LoadUser(next http.Handler) http.Handler {
@@ -12,9 +14,9 @@ func LoadUser(next http.Handler) http.Handler {
 		if authId, ok := r.URL.Query()["auth"]; ok {
 			ctx = context.WithValue(r.Context(), "auth", authId[0])
 
-			permissions := []string{"READ"}
+			permissions := []string{constants.AUTH_PERMISSION_READ}
 			if authId[0] == "admin" {
-				permissions = append(permissions, "ADMIN")
+				permissions = append(permissions, constants.AUTH_PERMISSION_ADMIN)
 			}
 			ctx = context.WithValue(ctx, "permissions", permissions)
 		}
