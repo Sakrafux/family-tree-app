@@ -39,8 +39,9 @@ func main() {
 	// Create schema
 	log.Println("Creating tables...")
 	queries := []string{
+		// Use STRING
 		`CREATE NODE TABLE Person (
-			id INT PRIMARY KEY,
+			id UUID PRIMARY KEY,
 			first_name STRING,
 			last_name STRING,
 			birth_name STRING,

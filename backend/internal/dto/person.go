@@ -1,9 +1,13 @@
 package dto
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Person struct {
-	Id        int32
+	Id        uuid.UUID
 	FirstName *string
 	LastName  *string
 	BirthName *string
@@ -15,7 +19,7 @@ type Person struct {
 func ParsePerson(data map[string]any) *Person {
 	person := &Person{}
 
-	person.Id = data["Id"].(int32)
+	person.Id = data["Id"].(uuid.UUID)
 	if firstName, ok := data["FirstName"].(string); ok {
 		person.FirstName = &firstName
 	}

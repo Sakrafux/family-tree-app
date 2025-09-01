@@ -1,10 +1,14 @@
 package dto
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type MarriageRelation struct {
-	Person1Id int32
-	Person2Id int32
+	Person1Id uuid.UUID
+	Person2Id uuid.UUID
 	Since     *time.Time
 	Until     *time.Time
 }
@@ -12,8 +16,8 @@ type MarriageRelation struct {
 func ParseMarriageRelation(data map[string]any) *MarriageRelation {
 	marriageRelation := &MarriageRelation{}
 
-	marriageRelation.Person1Id, _ = data["Person1Id"].(int32)
-	marriageRelation.Person2Id, _ = data["Person2Id"].(int32)
+	marriageRelation.Person1Id, _ = data["Person1Id"].(uuid.UUID)
+	marriageRelation.Person2Id, _ = data["Person2Id"].(uuid.UUID)
 	if since, ok := data["Since"].(time.Time); ok {
 		marriageRelation.Since = &since
 	}
