@@ -1,6 +1,5 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function Home() {
     const [data, setData] = useState("");
@@ -10,10 +9,12 @@ export default function Home() {
     }, []);
 
     return (
-        <div className="p-4">
+        <main className="p-4">
+            <Link href="/about">To About</Link>
+            <Link href="/some/1">To Some 1</Link>
             <h1>Fetched JSON</h1>
             <pre>{JSON.stringify(data, null, 4)}</pre>
-        </div>
+        </main>
     );
 }
 
