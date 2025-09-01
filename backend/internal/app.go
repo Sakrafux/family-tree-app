@@ -45,6 +45,7 @@ func (app *App) closeDatabase() {
 func (app *App) createRouter() http.Handler {
 	stack := middleware.CreateStack(
 		middleware.Logging,
+		middleware.Cors,
 		middleware.LoadUser,
 	)
 

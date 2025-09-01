@@ -1,7 +1,13 @@
-import Image from "next/image";
+"use client";
 
-export default async function Home() {
-    const data = await fetchGraph();
+import { useEffect, useState } from "react";
+
+export default function Home() {
+    const [data, setData] = useState("");
+
+    useEffect(() => {
+        fetchGraph().then((results) => setData(results));
+    }, []);
 
     return (
         <div className="p-4">
