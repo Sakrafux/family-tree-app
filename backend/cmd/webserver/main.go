@@ -5,7 +5,7 @@ import (
 	"github.com/Sakrafux/family-tree/backend/internal/server"
 )
 
-const DB_PATH string = "./dbsetup/example.kuzu"
+const DB_PATH string = "../dbsetup/example.kuzu"
 const PORT string = ":8080"
 
 func main() {

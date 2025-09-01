@@ -9,7 +9,7 @@ import (
 )
 
 const DB_PATH string = "./example.kuzu"
-const DATA_PATH_PREFIX string = "../../data"
+const DATA_PATH_PREFIX string = "../../../data"
 
 func main() {
 	log.Println("Setting up database...")
