@@ -4,7 +4,6 @@ import (
 	"flag"
 
 	"github.com/Sakrafux/family-tree/backend/internal"
-	"github.com/Sakrafux/family-tree/backend/internal/server"
 )
 
 const DB_PATH string = "../dbsetup/example.kuzu"
@@ -14,7 +13,7 @@ func main() {
 	dbPath := flag.String("db-path", DB_PATH, "Path to kuzu database file")
 	flag.Parse()
 
-	app := internal.NewApp(&server.Config{
+	app := internal.NewApp(&internal.AppConfig{
 		DB_PATH: *dbPath,
 		PORT:    PORT,
 	})

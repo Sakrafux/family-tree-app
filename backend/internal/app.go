@@ -7,39 +7,49 @@ import (
 	"github.com/Sakrafux/family-tree/backend/internal/db"
 	"github.com/Sakrafux/family-tree/backend/internal/middleware"
 	"github.com/Sakrafux/family-tree/backend/internal/router"
-	"github.com/Sakrafux/family-tree/backend/internal/server"
+	"github.com/kuzudb/go-kuzu"
 )
 
-type App struct {
-	Context *server.ApplicationContext
-	Config  *server.Config
-	Server  *http.Server
+type AppConfig struct {
+	DB_PATH string
+	PORT    string
 }
 
-func NewApp(config *server.Config) *App {
-	return &App{Context: &server.ApplicationContext{}, Config: config}
+type DbContext struct {
+	db   *kuzu.Database
+	conn *kuzu.Connection
+}
+
+type App struct {
+	dbContext *DbContext
+	config    *AppConfig
+	server    *http.Server
+}
+
+func NewApp(config *AppConfig) *App {
+	return &App{config: config, dbContext: &DbContext{db: nil, conn: nil}}
 }
 
 func (app *App) Start() {
-	app.connectToDatabase(app.Config.DB_PATH)
+	app.connectToDatabase(app.config.DB_PATH)
 	defer app.closeDatabase()
 
-	app.Server = &http.Server{
-		Addr:    app.Config.PORT,
+	app.server = &http.Server{
+		Addr:    app.config.PORT,
 		Handler: app.createRouter(),
 	}
 
-	log.Println("Listening on " + app.Config.PORT + "...")
-	panic(app.Server.ListenAndServe())
+	log.Println("Listening on " + app.config.PORT + "...")
+	panic(app.server.ListenAndServe())
 }
 
 func (app *App) connectToDatabase(path string) {
-	app.Context.Db, app.Context.Conn = db.ConnectToDatabase(path)
+	app.dbContext.db, app.dbContext.conn = db.ConnectToDatabase(path)
 }
 
 func (app *App) closeDatabase() {
-	app.Context.Conn.Close()
-	app.Context.Db.Close()
+	app.dbContext.conn.Close()
+	app.dbContext.db.Close()
 }
 
 func (app *App) createRouter() http.Handler {
@@ -49,5 +59,5 @@ func (app *App) createRouter() http.Handler {
 		middleware.LoadUser,
 	)
 
-	return stack(router.RegisterRoutes(app.Context))
+	return stack(router.CreaterRouter(app.dbContext.conn))
 }

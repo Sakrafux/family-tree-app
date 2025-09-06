@@ -7,15 +7,15 @@ import (
 )
 
 // This handler is based on `http.FileServer` but reroutes all paths to index.html for SPA behaviour
-type FrontendHandler struct {
+type FrontendSpaHandler struct {
 	fileServer http.Handler
 }
 
-func NewFrontendHandler() FrontendHandler {
-	return FrontendHandler{http.FileServer(http.Dir("frontend"))}
+func NewFrontendSpaHandler() FrontendSpaHandler {
+	return FrontendSpaHandler{http.FileServer(http.Dir("frontend"))}
 }
 
-func (h FrontendHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h FrontendSpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := filepath.Join("frontend", r.URL.Path)
 
 	_, err := os.Stat(path)

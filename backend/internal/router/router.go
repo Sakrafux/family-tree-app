@@ -4,33 +4,40 @@ import (
 	"net/http"
 
 	"github.com/Sakrafux/family-tree/backend/internal/api"
-	"github.com/Sakrafux/family-tree/backend/internal/constants"
-	"github.com/Sakrafux/family-tree/backend/internal/server"
+	"github.com/kuzudb/go-kuzu"
 )
 
-func RegisterRoutes(context *server.ApplicationContext) *AuthServeMux {
+func CreaterRouter(conn *kuzu.Connection) *AuthServeMux {
 	router := NewAuthServeMux()
 
-	apiHandler := &api.Handler{Context: context}
+	apiHandler := api.NewHandler(conn)
 	apiRouter := NewAuthServeMux()
 
 	apiRouter.HandleFunc("GET /nodes/persons", apiHandler.GetAllPersons)
 	apiRouter.HandleFunc("GET /relations/marriages", apiHandler.GetAllMarriageRelations)
 	apiRouter.HandleFunc("GET /relations/parents", apiHandler.GetAllParentRelations)
-	apiRouter.HandleFunc("GET /graph/complete", apiHandler.GetCompleteGraphData, constants.AUTH_PERMISSION_ADMIN)
+	apiRouter.HandleFunc("GET /graph/complete", apiHandler.GetCompleteGraphData)
 
-	router.Handle("/", apiRouter, constants.AUTH_PERMISSION_READ)
+	router.Handle("/", apiRouter)
 
-	publicRouter := NewAuthServeMux()
+	// TODO apply proper RBAC with this reference code
+	//apiRouter.HandleFunc("GET /graph/complete", apiHandler.GetCompleteGraphData, constants.AUTH_PERMISSION_ADMIN)
+	//router.Handle("/", apiRouter, constants.AUTH_PERMISSION_READ)
 
-	publicRouter.HandleFunc("GET /test", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("OK"))
-	})
-
-	router.Handle("/public/", http.StripPrefix("/public", publicRouter))
+	router.Handle("/public/", http.StripPrefix("/public", createPublicRouter()))
 
 	routerWrapper := NewAuthServeMux()
 	routerWrapper.Handle("/api/", http.StripPrefix("/api", router))
-	routerWrapper.Handle("/", NewFrontendHandler())
+	routerWrapper.Handle("/", NewFrontendSpaHandler())
 	return routerWrapper
+}
+
+func createPublicRouter() *AuthServeMux {
+	publicRouter := NewAuthServeMux()
+
+	publicRouter.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("OK"))
+	})
+
+	return publicRouter
 }

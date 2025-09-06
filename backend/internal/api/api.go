@@ -5,11 +5,15 @@ import (
 	"net/http"
 
 	"github.com/Sakrafux/family-tree/backend/internal/db"
-	"github.com/Sakrafux/family-tree/backend/internal/server"
+	"github.com/kuzudb/go-kuzu"
 )
 
 type Handler struct {
-	Context *server.ApplicationContext
+	conn *kuzu.Connection
+}
+
+func NewHandler(conn *kuzu.Connection) *Handler {
+	return &Handler{conn: conn}
 }
 
 func writeJson(w http.ResponseWriter, data any) {
@@ -25,15 +29,15 @@ func writeJson(w http.ResponseWriter, data any) {
 }
 
 func (h *Handler) GetCompleteGraphData(w http.ResponseWriter, r *http.Request) {
-	persons, err := db.GetAllPersons(h.Context.Conn)
+	persons, err := db.GetAllPersons(h.conn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	marriages, err := db.GetAllMarriageRelations(h.Context.Conn)
+	marriages, err := db.GetAllMarriageRelations(h.conn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	parents, err := db.GetAllParentRelations(h.Context.Conn)
+	parents, err := db.GetAllParentRelations(h.conn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -48,7 +52,7 @@ func (h *Handler) GetCompleteGraphData(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetAllPersons(w http.ResponseWriter, r *http.Request) {
-	data, err := db.GetAllPersons(h.Context.Conn)
+	data, err := db.GetAllPersons(h.conn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -57,7 +61,7 @@ func (h *Handler) GetAllPersons(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetAllMarriageRelations(w http.ResponseWriter, r *http.Request) {
-	data, err := db.GetAllMarriageRelations(h.Context.Conn)
+	data, err := db.GetAllMarriageRelations(h.conn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -66,7 +70,7 @@ func (h *Handler) GetAllMarriageRelations(w http.ResponseWriter, r *http.Request
 }
 
 func (h *Handler) GetAllParentRelations(w http.ResponseWriter, r *http.Request) {
-	data, err := db.GetAllParentRelations(h.Context.Conn)
+	data, err := db.GetAllParentRelations(h.conn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
