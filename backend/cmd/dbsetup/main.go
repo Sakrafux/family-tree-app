@@ -53,17 +53,25 @@ func main() {
 			birth_name STRING,
 			gender STRING,
 			dead BOOLEAN,
-			birth_date DATE,
-			death_date DATE
+			birth_date_year INT,
+			birth_date_month INT,
+			birth_date_day INT,
+			death_date_year INT,
+			death_date_month INT,
+			death_date_day INT
 		)`,
-		`CREATE REL TABLE IS_PARENT(FROM Person TO Person, adopted BOOLEAN)`,
+		`CREATE REL TABLE IS_PARENT_OF(FROM Person TO Person)`,
 		`CREATE REL TABLE IS_MARRIED(
 			FROM Person TO Person,
-			since DATE,
-			until DATE
+			since_year INT,
+			since_month INT,
+			since_day INT,
+			until_year INT,
+			until_month INT,
+			until_day INT
 		)`,
 		fmt.Sprintf("COPY Person FROM \"%s/people.csv\" (HEADER=true)", *dataPathPrefix),
-		fmt.Sprintf("COPY IS_PARENT FROM \"%s/parent-relations.csv\" (HEADER=true)", *dataPathPrefix),
+		fmt.Sprintf("COPY IS_PARENT_OF FROM \"%s/parent-relations.csv\" (HEADER=true)", *dataPathPrefix),
 		fmt.Sprintf("COPY IS_MARRIED FROM \"%s/marriage-relations.csv\" (HEADER=true)", *dataPathPrefix),
 	}
 	for _, query := range queries {
