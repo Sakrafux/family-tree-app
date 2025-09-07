@@ -18,13 +18,13 @@ import (
 )
 
 func main() {
-	output := flag.String("o", "caster_gen.go", "Output file for generated code")
+	output := flag.String("o", "getter_gen.go", "Output file for generated code")
 	flag.Parse()
 
 	callerFileName := os.Getenv("GOFILE")
 	targetPackage := os.Getenv("GOPACKAGE")
 
-	log.Println(fmt.Sprintf("Generating caster for %s in package %s...", callerFileName, targetPackage))
+	log.Println(fmt.Sprintf("Generating getters for %s in package %s...", callerFileName, targetPackage))
 
 	structs, imports := extractInfo()
 
@@ -37,40 +37,20 @@ func main() {
 
 	for _, si := range structs {
 		objName := strings.ToLower(si.name)
-
-		statements := make([]Code, 0)
-		statements = append(statements, Id(objName).Op(":=").Op("&").Id(si.name).Values())
-		statements = append(statements, Empty())
-
 		for _, sf := range si.fields {
-			var stmt *Statement
-			var t *Statement
-
-			if sf.qualified {
-				t = Qual(sf.typePath, sf.typeName)
-			} else {
-				t = Id(sf.typeName)
-			}
-
+			fc := f.Func().Params(Id(string(objName[0])).Id(si.name)).Id(fmt.Sprintf("Get%s", sf.target)).Params()
 			if sf.pointer {
-				targetName := strings.ToLower(sf.target)
-				stmt = If(
-					List(Id(targetName), Id("ok")).Op(":=").Id("data").Index(Lit(sf.source)).Dot("").Call(t),
-					Id("ok"),
-				).Block(Id(objName).Dot(sf.target).Op("=").Op("&").Id(targetName))
-			} else {
-				stmt = Id(objName).Dot(sf.target).Op("=").Id("data").Index(Lit(sf.source)).Dot("").Call(t)
+				fc = fc.Op("*")
 			}
-			statements = append(statements, stmt)
+			if sf.qualified {
+				fc = fc.Qual(sf.typePath, sf.typeName)
+			} else {
+				fc = fc.Id(sf.typeName)
+			}
+			fc = fc.Block(Return(Id(string(objName[0])).Dot(sf.target)))
+
+			f.Empty()
 		}
-
-		statements = append(statements, Empty())
-		statements = append(statements, Return(Id(objName)))
-
-		f.Func().Id(fmt.Sprintf("Cast%s", si.name)).Params(Id("data").Map(String()).Any()).Op("*").Id(si.name).Block(
-			statements...,
-		)
-		f.Empty()
 	}
 
 	formatted, err := format.Source([]byte(f.GoString()))

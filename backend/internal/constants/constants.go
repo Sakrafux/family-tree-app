@@ -1,3 +1,6 @@
+// While it may not be idiomatic in Go to use a central `constants` package,
+// this prevents any cyclical import issues that may occur otherwise
+
 package constants
 
 const (

@@ -15,16 +15,17 @@ import (
 	"strings"
 
 	. "github.com/dave/jennifer/jen"
+	"github.com/samber/lo"
 )
 
 func main() {
-	output := flag.String("o", "caster_gen.go", "Output file for generated code")
+	output := flag.String("o", "mapper_gen.go", "Output file for generated code")
 	flag.Parse()
 
 	callerFileName := os.Getenv("GOFILE")
 	targetPackage := os.Getenv("GOPACKAGE")
 
-	log.Println(fmt.Sprintf("Generating caster for %s in package %s...", callerFileName, targetPackage))
+	log.Println(fmt.Sprintf("Generating mapper for %s in package %s...", callerFileName, targetPackage))
 
 	structs, imports := extractInfo()
 
@@ -42,32 +43,60 @@ func main() {
 		statements = append(statements, Id(objName).Op(":=").Op("&").Id(si.name).Values())
 		statements = append(statements, Empty())
 
+		methods := make([]Code, 0)
+		fieldNames := make([]string, 0)
+
 		for _, sf := range si.fields {
 			var stmt *Statement
-			var t *Statement
 
-			if sf.qualified {
-				t = Qual(sf.typePath, sf.typeName)
-			} else {
-				t = Id(sf.typeName)
+			if sf.function != nil {
+				stmt = Id(objName).Dot(sf.target).Op("=").Id(*sf.function).Params(Id("source"))
+				statements = append(statements, stmt)
+				continue
 			}
 
-			if sf.pointer {
-				targetName := strings.ToLower(sf.target)
-				stmt = If(
-					List(Id(targetName), Id("ok")).Op(":=").Id("data").Index(Lit(sf.source)).Dot("").Call(t),
-					Id("ok"),
-				).Block(Id(objName).Dot(sf.target).Op("=").Op("&").Id(targetName))
-			} else {
-				stmt = Id(objName).Dot(sf.target).Op("=").Id("data").Index(Lit(sf.source)).Dot("").Call(t)
+			op := ""
+			if sf.pointer == "VtP" {
+				op = "&"
+			} else if sf.pointer == "PtV" {
+				op = "*"
 			}
-			statements = append(statements, stmt)
+
+			varElem := Id(strings.ToLower(sf.target)).Op(":=").Id("source").Dot(fmt.Sprintf("Get%s", sf.source)).Params()
+			stmt = Id(objName).Dot(sf.target).Op("=").Op(op).Id(strings.ToLower(sf.target))
+
+			if sf.pointer == "PtV" {
+				stmt = If(Id(strings.ToLower(sf.target)).Op("!=").Nil()).Block(stmt)
+			}
+
+			statements = append(statements, varElem, stmt)
+
+			if !lo.Contains(fieldNames, sf.source) {
+				t := Empty()
+
+				if sf.isPointer {
+					t = Op("*")
+				}
+
+				if sf.qualified {
+					t = t.Qual(sf.typePath, sf.typeName)
+				} else {
+					t = t.Id(sf.typeName)
+				}
+
+				method := Id(fmt.Sprintf("Get%s", sf.source)).Params().Parens(t)
+				methods = append(methods, method)
+				fieldNames = append(fieldNames, sf.source)
+			}
 		}
 
 		statements = append(statements, Empty())
 		statements = append(statements, Return(Id(objName)))
 
-		f.Func().Id(fmt.Sprintf("Cast%s", si.name)).Params(Id("data").Map(String()).Any()).Op("*").Id(si.name).Block(
+		f.Type().Id(fmt.Sprintf("%sSource", si.name)).Interface(methods...)
+		f.Empty()
+
+		f.Func().Id(fmt.Sprintf("MapTo%s", si.name)).Params(Id("source").Id(fmt.Sprintf("%sSource", si.name))).Op("*").Id(si.name).Block(
 			statements...,
 		)
 		f.Empty()
@@ -88,8 +117,10 @@ func main() {
 type structField struct {
 	source    string
 	target    string
-	pointer   bool
+	pointer   string
+	function  *string
 	qualified bool
+	isPointer bool
 	// Only relevant for qualified
 	typePath string
 	typeName string
@@ -102,7 +133,10 @@ type structInfo struct {
 
 func extractInfo() ([]structInfo, map[string]string) {
 	callerFileName := os.Getenv("GOFILE")
-	re := regexp.MustCompile("cast-source:\"([^\"]+)\"")
+	reMapFrom := regexp.MustCompile("map-from:\"([^\"]+)\"")
+	reMapPointer := regexp.MustCompile("map-pointer:\"([^\"]+)\"")
+	reMapFunc := regexp.MustCompile("map-func:\"([^\"]+)\"")
+	reMapIgnore := regexp.MustCompile("map-ignore:\"([^\"]+)\"")
 
 	f, err := parser.ParseFile(token.NewFileSet(), callerFileName, nil, 0)
 	if err != nil {
@@ -146,10 +180,33 @@ func extractInfo() ([]structInfo, map[string]string) {
 				for _, name := range field.Names {
 					sf := structField{target: name.Name}
 
+					source := name.Name
+					pointer := ""
+					function := ""
+					ignore := false
 					if field.Tag != nil {
-						sf.source = re.FindStringSubmatch(field.Tag.Value)[1]
-					} else {
-						sf.source = sf.target
+						mapFromMatches := reMapFrom.FindStringSubmatch(field.Tag.Value)
+						if mapFromMatches != nil {
+							source = mapFromMatches[1]
+						}
+						mapPointerMatches := reMapPointer.FindStringSubmatch(field.Tag.Value)
+						if mapPointerMatches != nil {
+							pointer = mapPointerMatches[1]
+						}
+						mapFuncMatches := reMapFunc.FindStringSubmatch(field.Tag.Value)
+						if mapFuncMatches != nil {
+							function = mapFuncMatches[1]
+						}
+						mapIgnoreMatches := reMapIgnore.FindStringSubmatch(field.Tag.Value)
+						if mapIgnoreMatches != nil {
+							ignore = mapIgnoreMatches[1] == "true"
+						}
+					}
+
+					sf.source = source
+					sf.pointer = pointer
+					if len(function) > 0 {
+						sf.function = &function
 					}
 
 					if ident, ok := field.Type.(*ast.Ident); ok {
@@ -159,7 +216,7 @@ func extractInfo() ([]structInfo, map[string]string) {
 						sf.typePath = qualifiedPathMap[selectorExpr.X.(*ast.Ident).Name]
 						sf.typeName = selectorExpr.Sel.Name
 					} else if starExpr, ok := field.Type.(*ast.StarExpr); ok {
-						sf.pointer = true
+						sf.isPointer = true
 
 						if ident, ok := starExpr.X.(*ast.Ident); ok {
 							sf.typeName = ident.Name
@@ -170,7 +227,9 @@ func extractInfo() ([]structInfo, map[string]string) {
 						}
 					}
 
-					fields = append(fields, sf)
+					if !ignore {
+						fields = append(fields, sf)
+					}
 				}
 			}
 
