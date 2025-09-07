@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/Sakrafux/family-tree/backend/internal/db"
@@ -16,36 +15,32 @@ func NewHandler(conn *kuzu.Connection) *Handler {
 	return &Handler{conn: conn}
 }
 
-func writeJson(w http.ResponseWriter, data any) {
-	b, err := json.Marshal(data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write(b)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
 func (h *Handler) GetCompleteGraphData(w http.ResponseWriter, r *http.Request) {
-	persons, err := db.GetAllPersons(h.conn)
-	if err != nil {
+	wg, chErr := initAsync(3)
+
+	chP := asyncDbCall(wg, chErr, func() ([]*db.Person, error) {
+		return db.GetAllPersons(h.conn)
+	})
+	chMR := asyncDbCall(wg, chErr, func() ([]*db.MarriageRelation, error) {
+		return db.GetAllMarriageRelations(h.conn)
+	})
+	chPR := asyncDbCall(wg, chErr, func() ([]*db.ParentRelation, error) {
+		return db.GetAllParentRelations(h.conn)
+	})
+
+	wg.Wait()
+
+	select {
+	case err := <-chErr:
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	marriages, err := db.GetAllMarriageRelations(h.conn)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	parents, err := db.GetAllParentRelations(h.conn)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	default:
 	}
 
 	container := map[string]any{
-		"persons":   persons,
-		"marriages": marriages,
-		"parents":   parents,
+		"persons":   <-chP,
+		"marriages": <-chMR,
+		"parents":   <-chPR,
 	}
 
 	writeJson(w, container)
@@ -55,6 +50,7 @@ func (h *Handler) GetAllPersons(w http.ResponseWriter, r *http.Request) {
 	data, err := db.GetAllPersons(h.conn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	writeJson(w, data)
@@ -64,6 +60,7 @@ func (h *Handler) GetAllMarriageRelations(w http.ResponseWriter, r *http.Request
 	data, err := db.GetAllMarriageRelations(h.conn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	writeJson(w, data)
@@ -73,6 +70,7 @@ func (h *Handler) GetAllParentRelations(w http.ResponseWriter, r *http.Request) 
 	data, err := db.GetAllParentRelations(h.conn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	writeJson(w, data)
