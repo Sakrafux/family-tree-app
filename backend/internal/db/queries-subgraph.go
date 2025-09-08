@@ -14,13 +14,14 @@ type PersonWithDistance struct {
 	Distance int64
 }
 
-type Subgraph struct {
+type Graph struct {
 	Persons   []*PersonWithDistance
 	Marriages []*MarriageRelation
 	Parents   []*ParentRelation
+	Siblings  []*SiblingRelation
 }
 
-func GetSubgraphForRootByName(conn *kuzu.Connection, distance int, firstName, LastName string) (*Subgraph, error) {
+func GetSubgraphForRootByName(conn *kuzu.Connection, distance int, firstName, LastName string) (*Graph, error) {
 	if distance < 1 {
 		return nil, fmt.Errorf("distance must be positive")
 	}
@@ -64,7 +65,7 @@ func GetSubgraphForRootByName(conn *kuzu.Connection, distance int, firstName, La
 	return getSubgraphForRoot(result)
 }
 
-func GetSubgraphForRootById(conn *kuzu.Connection, distance int, id uuid.UUID) (*Subgraph, error) {
+func GetSubgraphForRootById(conn *kuzu.Connection, distance int, id uuid.UUID) (*Graph, error) {
 	if distance < 1 {
 		return nil, fmt.Errorf("distance must be positive")
 	}
@@ -107,10 +108,11 @@ func GetSubgraphForRootById(conn *kuzu.Connection, distance int, id uuid.UUID) (
 	return getSubgraphForRoot(result)
 }
 
-func getSubgraphForRoot(result *kuzu.QueryResult) (*Subgraph, error) {
+func getSubgraphForRoot(result *kuzu.QueryResult) (*Graph, error) {
 	persons := make(map[uuid.UUID]*PersonWithDistance)
 	marriages := make(map[MarriageKey]*MarriageRelation)
 	parents := make(map[ParentRelation]*ParentRelation)
+	siblings := make(map[SiblingKey]*SiblingRelation)
 
 	nodes := make(map[kuzu.InternalID]*PersonWithDistance)
 	relationships := make([]kuzu.Relationship, 0)
@@ -158,13 +160,19 @@ func getSubgraphForRoot(result *kuzu.QueryResult) (*Subgraph, error) {
 			relationship.Properties["Person2Id"] = destination.Id
 			marriage := CastMarriageRelation(relationship.Properties)
 			marriages[*CastMarriageKey(relationship.Properties)] = marriage
+		case "IS_SIBLING":
+			relationship.Properties["Person1Id"] = source.Id
+			relationship.Properties["Person2Id"] = destination.Id
+			sibling := CastSiblingRelation(relationship.Properties)
+			siblings[*CastSiblingKey(relationship.Properties)] = sibling
 		}
 	}
 
-	subgraph := &Subgraph{
+	subgraph := &Graph{
 		Persons:   lo.Values(persons),
 		Marriages: lo.Values(marriages),
 		Parents:   lo.Values(parents),
+		Siblings:  lo.Values(siblings),
 	}
 
 	return subgraph, nil

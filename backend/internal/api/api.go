@@ -92,6 +92,22 @@ func (h *Handler) GetAllSiblingRelations(w http.ResponseWriter, r *http.Request)
 	writeJson(w, data)
 }
 
+func (h *Handler) GetGraphDistancesForRootByName(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.URL.Query().Get("id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data, err := db.GetGraphDistancesForRootById(h.conn, id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJson(w, data)
+}
+
 func (h *Handler) GetSubgraphForRoot(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Has("id") {
 		h.getSubgraphForRootById(w, r)

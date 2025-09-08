@@ -19,6 +19,7 @@ func CreaterRouter(conn *kuzu.Connection) *AuthServeMux {
 	apiRouter.HandleFunc("GET /relations/siblings", apiHandler.GetAllSiblingRelations)
 	apiRouter.HandleFunc("GET /graph/complete", apiHandler.GetCompleteGraphData)
 	apiRouter.HandleFunc("GET /graph/sub", apiHandler.GetSubgraphForRoot)
+	apiRouter.HandleFunc("GET /graph/distances", apiHandler.GetGraphDistancesForRootByName)
 
 	router.Handle("/", apiRouter)
 

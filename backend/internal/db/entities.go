@@ -42,8 +42,18 @@ type ParentRelation struct {
 	ChildId  uuid.UUID `cast-source:"ChildId"`
 }
 
+type SiblingKey struct {
+	Person1Id uuid.UUID `cast-source:"Person1Id"`
+	Person2Id uuid.UUID `cast-source:"Person2Id"`
+}
+
 type SiblingRelation struct {
 	Person1Id uuid.UUID `cast-source:"Person1Id"`
 	Person2Id uuid.UUID `cast-source:"Person2Id"`
 	IsHalf    bool      `cast-source:"is_half"`
+}
+
+type GraphDistance struct {
+	Id       uuid.UUID `cast-source:"id"`
+	Distance int64     `cast-source:"distance"`
 }
