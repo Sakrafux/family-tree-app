@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/Sakrafux/family-tree/backend/internal/db"
 	"github.com/kuzudb/go-kuzu"
@@ -79,8 +80,27 @@ func (h *Handler) GetAllParentRelations(w http.ResponseWriter, r *http.Request) 
 
 	writeJson(w, data)
 }
+
 func (h *Handler) GetAllSiblingRelations(w http.ResponseWriter, r *http.Request) {
 	data, err := db.GetAllSiblingRelations(h.conn)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJson(w, data)
+}
+
+func (h *Handler) GetSubgraphForRootByName(w http.ResponseWriter, r *http.Request) {
+	firstName := r.URL.Query().Get("firstName")
+	lastName := r.URL.Query().Get("lastName")
+	distance, err := strconv.Atoi(r.URL.Query().Get("distance"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data, err := db.GetSubgraphForRootByName(h.conn, distance, firstName, lastName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -7,29 +7,34 @@ import (
 )
 
 type Person struct {
-	Id             uuid.UUID `cast-source:"Id"`
-	FirstName      *string   `cast-source:"FirstName"`
-	LastName       *string   `cast-source:"LastName"`
-	BirthName      *string   `cast-source:"BirthName"`
-	Gender         *string   `cast-source:"Gender"`
-	IsDead         *bool     `cast-source:"IsDead"`
-	BirthDateYear  *int      `cast-source:"BirthDateYear"`
-	BirthDateMonth *int      `cast-source:"BirthDateMonth"`
-	BirthDateDay   *int      `cast-source:"BirthDateDay"`
-	DeathDateYear  *int      `cast-source:"DeathDateYear"`
-	DeathDateMonth *int      `cast-source:"DeathDateMonth"`
-	DeathDateDay   *int      `cast-source:"DeathDateDay"`
+	Id             uuid.UUID `cast-source:"id"`
+	FirstName      *string   `cast-source:"first_name"`
+	LastName       *string   `cast-source:"last_name"`
+	BirthName      *string   `cast-source:"birth_name"`
+	Gender         *string   `cast-source:"gender"`
+	IsDead         *bool     `cast-source:"is_dead"`
+	BirthDateYear  *int32    `cast-source:"birth_date_year"`
+	BirthDateMonth *int32    `cast-source:"birth_date_month"`
+	BirthDateDay   *int32    `cast-source:"birth_date_day"`
+	DeathDateYear  *int32    `cast-source:"death_date_year"`
+	DeathDateMonth *int32    `cast-source:"death_date_month"`
+	DeathDateDay   *int32    `cast-source:"death_date_day"`
+}
+
+type MarriageKey struct {
+	Person1Id uuid.UUID `cast-source:"Person1Id"`
+	Person2Id uuid.UUID `cast-source:"Person2Id"`
 }
 
 type MarriageRelation struct {
 	Person1Id  uuid.UUID `cast-source:"Person1Id"`
 	Person2Id  uuid.UUID `cast-source:"Person2Id"`
-	SinceYear  *int      `cast-source:"SinceYear"`
-	SinceMonth *int      `cast-source:"SinceMonth"`
-	SinceDay   *int      `cast-source:"SinceDay"`
-	UntilYear  *int      `cast-source:"UntilYear"`
-	UntilMonth *int      `cast-source:"UntilMonth"`
-	UntilDay   *int      `cast-source:"UntilDay"`
+	SinceYear  *int32    `cast-source:"since_year"`
+	SinceMonth *int32    `cast-source:"since_month"`
+	SinceDay   *int32    `cast-source:"since_day"`
+	UntilYear  *int32    `cast-source:"until_year"`
+	UntilMonth *int32    `cast-source:"until_month"`
+	UntilDay   *int32    `cast-source:"until_day"`
 }
 
 type ParentRelation struct {
@@ -40,5 +45,5 @@ type ParentRelation struct {
 type SiblingRelation struct {
 	Person1Id uuid.UUID `cast-source:"Person1Id"`
 	Person2Id uuid.UUID `cast-source:"Person2Id"`
-	IsHalf    bool      `cast-source:"IsHalf"`
+	IsHalf    bool      `cast-source:"is_half"`
 }
