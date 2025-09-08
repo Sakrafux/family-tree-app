@@ -8,7 +8,7 @@ func GetAllPersons(conn *kuzu.Connection) ([]*Person, error) {
 	query := `
 	MATCH (a:Person)
 	RETURN a.id as Id, a.first_name as FirstName, a.last_name as LastName, 
-		a.birth_name as BirthName, a.gender as Gender, a.dead as Dead, 
+		a.birth_name as BirthName, a.gender as Gender, a.is_dead as IsDead, 
 		a.birth_date_year as BirthDateYear, a.birth_date_month as BirthDateMonth, a.birth_date_day as BirthDateDay,
 		a.death_date_year as DeathDateYear, a.death_date_month as DeathDateMonth, a.death_date_day as DeathDateDay
 	`
@@ -31,4 +31,12 @@ func GetAllParentRelations(conn *kuzu.Connection) ([]*ParentRelation, error) {
 	RETURN a.id as ParentId, b.id as ChildId
 	`
 	return executeQuery(conn, query, CastParentRelation)
+}
+
+func GetAllSiblingRelations(conn *kuzu.Connection) ([]*SiblingRelation, error) {
+	query := `
+	MATCH (a:Person)-[e:IS_SIBLING]->(b:Person)
+	RETURN a.id as Person1Id, b.id as Person2Id, e.is_half as IsHalf
+	`
+	return executeQuery(conn, query, CastSiblingRelation)
 }

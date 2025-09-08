@@ -12,7 +12,7 @@ type Person struct {
 	LastName       *string   `cast-source:"LastName"`
 	BirthName      *string   `cast-source:"BirthName"`
 	Gender         *string   `cast-source:"Gender"`
-	Dead           *bool     `cast-source:"Dead"`
+	IsDead         *bool     `cast-source:"IsDead"`
 	BirthDateYear  *int      `cast-source:"BirthDateYear"`
 	BirthDateMonth *int      `cast-source:"BirthDateMonth"`
 	BirthDateDay   *int      `cast-source:"BirthDateDay"`
@@ -35,4 +35,10 @@ type MarriageRelation struct {
 type ParentRelation struct {
 	ParentId uuid.UUID `cast-source:"ParentId"`
 	ChildId  uuid.UUID `cast-source:"ChildId"`
+}
+
+type SiblingRelation struct {
+	Person1Id uuid.UUID `cast-source:"Person1Id"`
+	Person2Id uuid.UUID `cast-source:"Person2Id"`
+	IsHalf    bool      `cast-source:"IsHalf"`
 }

@@ -16,7 +16,7 @@ func NewHandler(conn *kuzu.Connection) *Handler {
 }
 
 func (h *Handler) GetCompleteGraphData(w http.ResponseWriter, r *http.Request) {
-	wg, chErr := initAsync(3)
+	wg, chErr := initAsync(4)
 
 	chP := asyncDbCall(wg, chErr, func() ([]*db.Person, error) {
 		return db.GetAllPersons(h.conn)
@@ -26,6 +26,9 @@ func (h *Handler) GetCompleteGraphData(w http.ResponseWriter, r *http.Request) {
 	})
 	chPR := asyncDbCall(wg, chErr, func() ([]*db.ParentRelation, error) {
 		return db.GetAllParentRelations(h.conn)
+	})
+	chS := asyncDbCall(wg, chErr, func() ([]*db.SiblingRelation, error) {
+		return db.GetAllSiblingRelations(h.conn)
 	})
 
 	wg.Wait()
@@ -41,6 +44,7 @@ func (h *Handler) GetCompleteGraphData(w http.ResponseWriter, r *http.Request) {
 		"persons":   <-chP,
 		"marriages": <-chMR,
 		"parents":   <-chPR,
+		"siblings":  <-chS,
 	}
 
 	writeJson(w, container)
@@ -68,6 +72,15 @@ func (h *Handler) GetAllMarriageRelations(w http.ResponseWriter, r *http.Request
 
 func (h *Handler) GetAllParentRelations(w http.ResponseWriter, r *http.Request) {
 	data, err := db.GetAllParentRelations(h.conn)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJson(w, data)
+}
+func (h *Handler) GetAllSiblingRelations(w http.ResponseWriter, r *http.Request) {
+	data, err := db.GetAllSiblingRelations(h.conn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -42,17 +42,15 @@ func main() {
 	defer conn.Close()
 	log.Println("Connected to database")
 
-	// Create schema
 	log.Println("Creating tables...")
 	queries := []string{
-		// Use STRING
 		`CREATE NODE TABLE Person (
 			id UUID PRIMARY KEY,
 			first_name STRING,
 			last_name STRING,
 			birth_name STRING,
 			gender STRING,
-			dead BOOLEAN,
+			is_dead BOOLEAN,
 			birth_date_year INT,
 			birth_date_month INT,
 			birth_date_day INT,
@@ -70,6 +68,7 @@ func main() {
 			until_month INT,
 			until_day INT
 		)`,
+		`CREATE REL TABLE IS_SIBLING(FROM Person TO Person, is_half BOOLEAN)`,
 		fmt.Sprintf("COPY Person FROM \"%s/people.csv\" (HEADER=true)", *dataPathPrefix),
 		fmt.Sprintf("COPY IS_PARENT_OF FROM \"%s/parent-relations.csv\" (HEADER=true)", *dataPathPrefix),
 		fmt.Sprintf("COPY IS_MARRIED FROM \"%s/marriage-relations.csv\" (HEADER=true)", *dataPathPrefix),
@@ -82,5 +81,23 @@ func main() {
 		defer queryResult.Close()
 	}
 	log.Println("Tables created")
+
+	log.Println("Inferring sibling relationships...")
+	queryResult, err := conn.Query(`
+		MATCH (p1:Person)<-[:IS_PARENT_OF]-(parent)-[:IS_PARENT_OF]->(p2:Person)
+		WHERE id(p1) < id(p2)
+		WITH p1, p2, collect(DISTINCT parent) AS parents
+		MERGE (p1)-[s:IS_SIBLING]->(p2)
+		  SET s.is_half = CASE 
+							WHEN size(parents) = 1 THEN true 
+							ELSE false 
+						  END;
+	`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer queryResult.Close()
+	log.Println("Sibling relationships inferred")
+
 	log.Println("Setup complete")
 }

@@ -19,7 +19,7 @@ func writeJson(w http.ResponseWriter, data any) {
 }
 
 func initAsync(n int) (*sync.WaitGroup, chan error) {
-	chErr := make(chan error, 3)
+	chErr := make(chan error, n)
 	var wg sync.WaitGroup
 	wg.Add(n)
 
