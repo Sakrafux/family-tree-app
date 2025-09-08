@@ -47,6 +47,7 @@ func main() {
 		`CREATE NODE TABLE Person (
 			id UUID PRIMARY KEY,
 			first_name STRING,
+			middle_name STRING,
 			last_name STRING,
 			birth_name STRING,
 			gender STRING,

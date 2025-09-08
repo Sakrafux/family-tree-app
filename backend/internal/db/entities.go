@@ -9,6 +9,7 @@ import (
 type Person struct {
 	Id             uuid.UUID `cast-source:"id"`
 	FirstName      *string   `cast-source:"first_name"`
+	MiddleName     *string   `cast-source:"middle_name"`
 	LastName       *string   `cast-source:"last_name"`
 	BirthName      *string   `cast-source:"birth_name"`
 	Gender         *string   `cast-source:"gender"`
