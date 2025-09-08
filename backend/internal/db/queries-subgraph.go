@@ -34,15 +34,11 @@ func GetSubgraphForRootByName(conn *kuzu.Connection, distance int, firstName, La
 		WITH other AS person, relationships(path) AS relations, length(path) AS distance
 		UNWIND relations AS relation
 		RETURN person, relation, distance
-
 		UNION
-
 		MATCH (root:Person {first_name: $first_name, last_name: $last_name})-[r]-(other:Person)
 		RETURN root AS person, r AS relation, 0 AS distance
 		LIMIT 1
-
 		UNION
-
 		MATCH (root:Person {first_name: $first_name, last_name: $last_name})-[*..%d]-(other:Person)
 		WITH collect(other) AS subgraphNodes
 		UNWIND subgraphNodes AS a
@@ -65,6 +61,53 @@ func GetSubgraphForRootByName(conn *kuzu.Connection, distance int, firstName, La
 	}
 	defer result.Close()
 
+	return getSubgraphForRoot(result)
+}
+
+func GetSubgraphForRootById(conn *kuzu.Connection, distance int, id uuid.UUID) (*Subgraph, error) {
+	if distance < 1 {
+		return nil, fmt.Errorf("distance must be positive")
+	}
+	// For memory buffer pool considerations
+	if distance > 3 {
+		return nil, fmt.Errorf("distance too high: %d", distance)
+	}
+
+	ps, err := conn.Prepare(fmt.Sprintf(`
+		MATCH path = (root:Person {id: UUID($id)})-[*..%d]-(other:Person)
+		WITH other AS person, relationships(path) AS relations, length(path) AS distance
+		UNWIND relations AS relation
+		RETURN person, relation, distance
+		UNION
+		MATCH (root:Person {id: UUID($id)})-[r]-(other:Person)
+		RETURN root AS person, r AS relation, 0 AS distance
+		LIMIT 1
+		UNION
+		MATCH (root:Person {id: UUID($id)})-[*..%d]-(other:Person)
+		WITH collect(other) AS subgraphNodes
+		UNWIND subgraphNodes AS a
+		UNWIND subgraphNodes AS b
+		MATCH (a)-[r]-(b)
+		WHERE id(a) < id(b)
+		RETURN DISTINCT a AS person, r AS relation, -1 AS distance
+	`, distance, distance))
+	if err != nil {
+		return nil, err
+	}
+	defer ps.Close()
+
+	result, err := conn.Execute(ps, map[string]any{
+		"id": id.String(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer result.Close()
+
+	return getSubgraphForRoot(result)
+}
+
+func getSubgraphForRoot(result *kuzu.QueryResult) (*Subgraph, error) {
 	persons := make(map[uuid.UUID]*PersonWithDistance)
 	marriages := make(map[MarriageKey]*MarriageRelation)
 	parents := make(map[ParentRelation]*ParentRelation)

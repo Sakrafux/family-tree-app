@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/Sakrafux/family-tree/backend/internal/db"
+	"github.com/google/uuid"
 	"github.com/kuzudb/go-kuzu"
 )
 
@@ -91,7 +92,17 @@ func (h *Handler) GetAllSiblingRelations(w http.ResponseWriter, r *http.Request)
 	writeJson(w, data)
 }
 
-func (h *Handler) GetSubgraphForRootByName(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetSubgraphForRoot(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Has("id") {
+		h.getSubgraphForRootById(w, r)
+	} else if r.URL.Query().Has("firstName") && r.URL.Query().Has("lastName") {
+		h.getSubgraphForRootByName(w, r)
+	} else {
+		http.Error(w, "Invalid query parameters", http.StatusInternalServerError)
+	}
+}
+
+func (h *Handler) getSubgraphForRootByName(w http.ResponseWriter, r *http.Request) {
 	firstName := r.URL.Query().Get("firstName")
 	lastName := r.URL.Query().Get("lastName")
 	distance, err := strconv.Atoi(r.URL.Query().Get("distance"))
@@ -101,6 +112,27 @@ func (h *Handler) GetSubgraphForRootByName(w http.ResponseWriter, r *http.Reques
 	}
 
 	data, err := db.GetSubgraphForRootByName(h.conn, distance, firstName, lastName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJson(w, data)
+}
+
+func (h *Handler) getSubgraphForRootById(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.URL.Query().Get("id"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	distance, err := strconv.Atoi(r.URL.Query().Get("distance"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data, err := db.GetSubgraphForRootById(h.conn, distance, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
