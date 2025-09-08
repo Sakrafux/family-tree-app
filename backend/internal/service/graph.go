@@ -42,11 +42,16 @@ func (s *GraphService) GetCompleteGraph() (*CompleteGraphResponse, error) {
 	}
 
 	result := &CompleteGraphResponse{
-		Persons:   <-chPersons,
-		Marriages: <-chMarriageRelations,
-		Parents:   <-chParentRelations,
-		Siblings:  <-chSiblingRelations,
+		Persons:           []*CompleteGraphPersonDto{},
+		MarriageRelations: <-chMarriageRelations,
+		ParentRelations:   <-chParentRelations,
+		SiblingRelations:  <-chSiblingRelations,
 	}
+
+	personMap := lo.SliceToMap(<-chPersons, func(item *db.Person) (uuid.UUID, *CompleteGraphPersonDto) {
+		return item.Id, &CompleteGraphPersonDto{item, 0}
+	})
+	result.Persons = applyLevels(result.ParentRelations, personMap, nil)
 
 	return result, nil
 }
@@ -78,15 +83,14 @@ func (s *GraphService) GetSubgraphForRootById(id uuid.UUID, maxDistance int) (*S
 	default:
 	}
 
-	result := &SubgraphResponse{Persons: []*RelativePersonDto{}}
+	result := &SubgraphResponse{Persons: []*SubgraphPersonDto{}}
 
 	personMap := lo.SliceToMap(<-chPersons, func(item *db.Person) (uuid.UUID, *db.Person) {
 		return item.Id, item
 	})
 	relevantIdMap := map[uuid.UUID]bool{}
 
-	zeroDistance := int64(0)
-	result.Root = &RelativePersonDto{personMap[id], &zeroDistance}
+	result.Root = &SubgraphPersonDto{personMap[id], 0, 0}
 
 	graphDistances := slices.Insert(<-chDistances, 0, &db.GraphDistance{
 		Id:       id,
@@ -99,18 +103,81 @@ func (s *GraphService) GetSubgraphForRootById(id uuid.UUID, maxDistance int) (*S
 		}
 		relevantIdMap[graphDistance.Id] = true
 		result.Persons = append(result.Persons,
-			&RelativePersonDto{Person: personMap[graphDistance.Id], Distance: &graphDistance.Distance},
+			&SubgraphPersonDto{Person: personMap[graphDistance.Id], Distance: graphDistance.Distance},
 		)
 	}
-	result.Marriages = lo.Filter(<-chMarriageRelations, func(item *db.MarriageRelation, index int) bool {
+	result.MarriageRelations = lo.Filter(<-chMarriageRelations, func(item *db.MarriageRelation, index int) bool {
 		return relevantIdMap[item.Person1Id] && relevantIdMap[item.Person2Id]
 	})
-	result.Parents = lo.Filter(<-chParentRelations, func(item *db.ParentRelation, index int) bool {
+	result.ParentRelations = lo.Filter(<-chParentRelations, func(item *db.ParentRelation, index int) bool {
 		return relevantIdMap[item.ParentId] && relevantIdMap[item.ChildId]
 	})
-	result.Siblings = lo.Filter(<-chSiblingRelations, func(item *db.SiblingRelation, index int) bool {
+	result.SiblingRelations = lo.Filter(<-chSiblingRelations, func(item *db.SiblingRelation, index int) bool {
 		return relevantIdMap[item.Person1Id] && relevantIdMap[item.Person2Id]
 	})
 
+	personLevelMap := lo.SliceToMap(result.Persons, func(item *SubgraphPersonDto) (uuid.UUID, *SubgraphPersonDto) {
+		return item.Id, item
+	})
+	result.Persons = applyLevels(result.ParentRelations, personLevelMap, &id)
+
 	return result, nil
+}
+
+func applyLevels[T levelSetter](parentRelations []*db.ParentRelation, personMap map[uuid.UUID]T, id *uuid.UUID) []T {
+	parentMap := make(map[uuid.UUID][]uuid.UUID)
+	childMap := make(map[uuid.UUID][]uuid.UUID)
+
+	if len(parentRelations) == 0 {
+		return lo.Values(personMap)
+	}
+
+	for _, pr := range parentRelations {
+		if _, ok := parentMap[pr.ChildId]; !ok {
+			parentMap[pr.ChildId] = make([]uuid.UUID, 0)
+		}
+		parentMap[pr.ChildId] = append(parentMap[pr.ChildId], pr.ParentId)
+		if _, ok := childMap[pr.ParentId]; !ok {
+			childMap[pr.ParentId] = make([]uuid.UUID, 0)
+		}
+		childMap[pr.ParentId] = append(childMap[pr.ParentId], pr.ChildId)
+	}
+
+	var startId uuid.UUID
+	if id != nil {
+		startId = *id
+	} else {
+		// Any random value suffices
+		startId = parentRelations[0].ParentId
+	}
+	visited := make(map[uuid.UUID]bool)
+	recordLevel(personMap, parentMap, childMap, visited, startId, 0)
+
+	return lo.Values(personMap)
+}
+
+func recordLevel[T levelSetter](
+	personMap map[uuid.UUID]T, parentMap, childMap map[uuid.UUID][]uuid.UUID,
+	visited map[uuid.UUID]bool, id uuid.UUID, level int,
+) {
+	if _, ok := visited[id]; ok {
+		return
+	}
+	visited[id] = true
+
+	person := personMap[id]
+	person.setLevel(level)
+
+	if parentIds, ok := parentMap[id]; ok {
+		delete(parentMap, id)
+		for _, parentId := range parentIds {
+			recordLevel[T](personMap, parentMap, childMap, visited, parentId, level-1)
+		}
+	}
+	if childIds, ok := childMap[id]; ok {
+		delete(childMap, id)
+		for _, childId := range childIds {
+			recordLevel[T](personMap, parentMap, childMap, visited, childId, level+1)
+		}
+	}
 }

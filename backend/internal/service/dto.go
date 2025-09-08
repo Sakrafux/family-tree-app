@@ -2,22 +2,40 @@ package service
 
 import "github.com/Sakrafux/family-tree/backend/internal/db"
 
-type CompleteGraphResponse struct {
-	Persons   []*db.Person
-	Marriages []*db.MarriageRelation
-	Parents   []*db.ParentRelation
-	Siblings  []*db.SiblingRelation
+type levelSetter interface {
+	setLevel(level int)
 }
 
-type RelativePersonDto struct {
+type CompleteGraphPersonDto struct {
 	*db.Person
-	Distance *int64
+	Level int
+}
+
+func (dto *CompleteGraphPersonDto) setLevel(level int) {
+	dto.Level = level
+}
+
+type CompleteGraphResponse struct {
+	Persons           []*CompleteGraphPersonDto
+	MarriageRelations []*db.MarriageRelation
+	ParentRelations   []*db.ParentRelation
+	SiblingRelations  []*db.SiblingRelation
+}
+
+type SubgraphPersonDto struct {
+	*db.Person
+	Distance int64
+	Level    int
+}
+
+func (dto *SubgraphPersonDto) setLevel(level int) {
+	dto.Level = level
 }
 
 type SubgraphResponse struct {
-	Root      *RelativePersonDto
-	Persons   []*RelativePersonDto
-	Marriages []*db.MarriageRelation
-	Parents   []*db.ParentRelation
-	Siblings  []*db.SiblingRelation
+	Root              *SubgraphPersonDto
+	Persons           []*SubgraphPersonDto
+	MarriageRelations []*db.MarriageRelation
+	ParentRelations   []*db.ParentRelation
+	SiblingRelations  []*db.SiblingRelation
 }
