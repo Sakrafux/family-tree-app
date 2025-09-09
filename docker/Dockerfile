@@ -43,8 +43,8 @@ COPY --from=builder /app/webserver .
 COPY --from=builder /go/pkg/mod/github.com/kuzudb/go-kuzu@v0.11.2/lib/dynamic/linux-amd64/libkuzu.so /usr/local/lib/
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
-# Copy frontend static files
-COPY ../frontend/out ./frontend
+# Copy frontend-old static files
+COPY ../frontend-old/out ./frontend
 
 # Expose port
 EXPOSE 8080
