@@ -7,7 +7,7 @@ import (
 func GetAllPersons(conn *kuzu.Connection) ([]*Person, error) {
 	query := `
 	MATCH (a:Person)
-	RETURN a.id as id, a.first_name as first_name, a.last_name as last_name, 
+	RETURN a.id as id, a.first_name as first_name, a.middle_name as middle_name, a.last_name as last_name, 
 		a.birth_name as birth_name, a.gender as gender, a.is_dead as is_dead, 
 		a.birth_date_year as birth_date_year, a.birth_date_month as birth_date_month, a.birth_date_day as birth_date_day,
 		a.death_date_year as death_date_year, a.death_date_month as death_date_month, a.death_date_day as death_date_day

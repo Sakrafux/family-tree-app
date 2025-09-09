@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"slices"
 
 	"github.com/Sakrafux/family-tree/backend/internal/db"
@@ -90,7 +91,11 @@ func (s *GraphService) GetSubgraphForRootById(id uuid.UUID, maxDistance int) (*S
 	})
 	relevantIdMap := map[uuid.UUID]bool{}
 
-	result.Root = &SubgraphPersonDto{personMap[id], 0, 0}
+	if root, ok := personMap[id]; ok {
+		result.Root = &SubgraphPersonDto{root, 0, 0}
+	} else {
+		return nil, errors.New("root not found")
+	}
 
 	graphDistances := slices.Insert(<-chDistances, 0, &db.GraphDistance{
 		Id:       id,
