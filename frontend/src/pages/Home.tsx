@@ -1,5 +1,6 @@
 import { useApiCompleteGraph } from "@/api/data/CompleteGraphProvider.tsx";
 import { useEffect } from "react";
+import FamilyTree from "@/components/FamilyTree.tsx";
 
 function Home() {
     const { state, getCompleteGraph } = useApiCompleteGraph();
@@ -11,10 +12,9 @@ function Home() {
     }, [state]);
 
     return (
-        <div className="bg-amber-400">
-            <h1>Home</h1>
-            <div>{JSON.stringify(state)}</div>
-        </div>
+        <main className="full-wo-header-height w-full">
+            <FamilyTree />
+        </main>
     );
 }
 

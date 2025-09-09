@@ -1,3 +1,7 @@
 export default function About() {
-    return <h1>About Us</h1>;
+    return (
+        <main className="text-container py-4">
+            <h1>About Us</h1>
+        </main>
+    );
 }
