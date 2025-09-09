@@ -1,10 +1,11 @@
 package service
 
 import (
-	"errors"
+	"fmt"
 	"slices"
 
 	"github.com/Sakrafux/family-tree/backend/internal/db"
+	"github.com/Sakrafux/family-tree/backend/internal/errors"
 	"github.com/google/uuid"
 	"github.com/kuzudb/go-kuzu"
 	"github.com/samber/lo"
@@ -38,7 +39,7 @@ func (s *GraphService) GetCompleteGraph() (*CompleteGraphResponse, error) {
 
 	select {
 	case err := <-chErr:
-		return nil, err
+		return nil, errors.NewInternalServerError(err.Error())
 	default:
 	}
 
@@ -80,7 +81,7 @@ func (s *GraphService) GetSubgraphForRootById(id uuid.UUID, maxDistance int) (*S
 
 	select {
 	case err := <-chErr:
-		return nil, err
+		return nil, errors.NewInternalServerError(err.Error())
 	default:
 	}
 
@@ -94,7 +95,7 @@ func (s *GraphService) GetSubgraphForRootById(id uuid.UUID, maxDistance int) (*S
 	if root, ok := personMap[id]; ok {
 		result.Root = &SubgraphPersonDto{root, 0, 0}
 	} else {
-		return nil, errors.New("root not found")
+		return nil, errors.NewNotFoundError(fmt.Sprintf("'%s' not found", id))
 	}
 
 	graphDistances := slices.Insert(<-chDistances, 0, &db.GraphDistance{
