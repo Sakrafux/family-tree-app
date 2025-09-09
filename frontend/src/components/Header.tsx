@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import BellSvg from "@/assets/bell.svg?react";
 import AvatarSvg from "@/assets/avatar.svg?react";
 
-function NavBar() {
+function Header() {
     const isLoggedIn = false;
 
     return (
@@ -49,4 +49,4 @@ function NavBar() {
     );
 }
 
-export default NavBar;
+export default Header;

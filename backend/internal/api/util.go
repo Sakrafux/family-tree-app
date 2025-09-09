@@ -10,7 +10,7 @@ func writeJson(w http.ResponseWriter, data any) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	w.NavBar().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(b)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
