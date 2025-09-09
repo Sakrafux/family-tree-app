@@ -33,11 +33,13 @@ func (h *Handler) GetCompleteGraphData(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetSubgraphForRoot(w http.ResponseWriter, r *http.Request) {
-	if !r.URL.Query().Has("id") {
-		http.Error(w, "Invalid query parameters", http.StatusInternalServerError)
+	paramId := r.PathValue("id")
+	if len(paramId) == 0 {
+		http.Error(w, "Missing path parameter 'id'", http.StatusInternalServerError)
+		return
 	}
 
-	id, err := uuid.Parse(r.URL.Query().Get("id"))
+	id, err := uuid.Parse(paramId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
