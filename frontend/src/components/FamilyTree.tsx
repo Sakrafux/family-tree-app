@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as d3 from "d3-hierarchy"; // for hierarchy, tree, etc.
 import { select } from "d3-selection"; // for select, selectAll, append
-import { zoom } from "d3-zoom"; // for zoom behavior
+import { zoom, zoomIdentity } from "d3-zoom"; // for zoom behavior
 import familyData from "./family-tree.json";
 
 // Handle Spouses: The standard tree layout shows parent-child links. To show spouses side-by-side, you need a custom layout. This is more advanced but very common.
@@ -71,6 +71,10 @@ const FamilyTree = () => {
         const offsetX = (svgWidth - treeWidth) / 2 - x0;
         const offsetY = (svgHeight - treeHeight) / 2 - y0 - 50; // -50 for top padding
 
+        const initialTransform = zoomIdentity
+            .translate(offsetX, offsetY)
+            .scale(1); // Start at scale 1 (no zoom)
+
         // 4. Setup Zoom behavior (using the imported 'zoom' function)
         const zoomBehavior = zoom<SVGSVGElement, unknown>()
             .scaleExtent([0.1, 4])
@@ -80,16 +84,14 @@ const FamilyTree = () => {
                 svg.select("g").attr("transform", zoomEvent.transform);
             });
 
-        // 5. Apply the zoom behavior to the SVG
-        svg.call(zoomBehavior);
-
         // Clear previous drawing
         svg.selectAll("*").remove();
 
         // Create a group for all zoomable elements
-        const g = svg
-            .append("g")
-            .attr("transform", `translate(${offsetX},${offsetY})`);
+        const g = svg.append("g");
+
+        // 5. Apply the zoom behavior to the SVG
+        svg.call(zoomBehavior).call(zoomBehavior.transform, initialTransform);
 
         // 5. Draw links (lines between nodes)
         g.append("g")
