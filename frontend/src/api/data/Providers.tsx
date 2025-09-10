@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from "react";
-import { CompleteGraphProvider } from "@/api/data/CompleteGraphProvider.tsx";
+import { FamilyTreeProvider } from "@/api/data/FamilyTreeProvider.tsx";
 
-const providers = [CompleteGraphProvider];
+const providers = [FamilyTreeProvider];
 
 export function DataProviders({ children }: PropsWithChildren) {
     return providers.reduceRight(

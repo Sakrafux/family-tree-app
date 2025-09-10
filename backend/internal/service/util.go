@@ -1,6 +1,9 @@
 package service
 
-import "sync"
+import (
+	"math"
+	"sync"
+)
 
 func initAsync(n int) (*sync.WaitGroup, chan error) {
 	chErr := make(chan error, n)
@@ -23,4 +26,11 @@ func asyncDbCall[R any](wg *sync.WaitGroup, chErr chan error, cb func() (R, erro
 	}()
 
 	return chR
+}
+
+func derefDateInt32(p *int32) int32 {
+	if p == nil {
+		return math.MaxInt32
+	}
+	return *p
 }

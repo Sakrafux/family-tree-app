@@ -1,19 +1,21 @@
-import { useApiCompleteGraph } from "@/api/data/CompleteGraphProvider.tsx";
+import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider.tsx";
 import { useEffect } from "react";
-import FamilyTree from "@/components/FamilyTree.tsx";
+import FamilyTree from "@/components/FamilyTree";
 
 function Home() {
-    const { state, getCompleteGraph } = useApiCompleteGraph();
+    const { state, getFamilyTree } = useApiFamilyTree();
 
     useEffect(() => {
         if (!state.data && !state.loading) {
-            getCompleteGraph();
+            getFamilyTree();
         }
     }, [state]);
 
+    if (!state.data) return null;
+
     return (
         <main className="full-wo-header-height w-full">
-            <FamilyTree />
+            <FamilyTree familyTree={state.data} />
         </main>
     );
 }
