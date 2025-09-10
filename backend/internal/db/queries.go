@@ -1,6 +1,7 @@
 package db
 
 import (
+	"github.com/google/uuid"
 	"github.com/kuzudb/go-kuzu"
 )
 
@@ -39,4 +40,13 @@ func GetAllSiblingRelations(conn *kuzu.Connection) ([]*SiblingRelation, error) {
 	RETURN a.id as Person1Id, b.id as Person2Id, e.is_half as is_half
 	`
 	return executeQuery(conn, query, CastSiblingRelation)
+}
+
+func GetGraphDistancesForRootById(conn *kuzu.Connection, id uuid.UUID) ([]*GraphDistance, error) {
+	query := `
+	MATCH (root:Person {id: UUID($id)})-[r* SHORTEST]-(other:Person)
+	RETURN other.id AS id, length(r) AS distance
+	ORDER BY distance
+	`
+	return executePreparedStatement(conn, query, map[string]any{"id": id.String()}, CastGraphDistance)
 }

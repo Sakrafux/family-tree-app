@@ -46,37 +46,3 @@ func (h *Handler) GetFamilyTree(w http.ResponseWriter, r *http.Request) {
 
 	writeJson(w, data)
 }
-
-func (h *Handler) GetCompleteGraphData(w http.ResponseWriter, r *http.Request) {
-	data, err := h.graphService.GetCompleteGraph()
-	if err != nil {
-		errors.HandleHttpError(w, r, err)
-		return
-	}
-
-	writeJson(w, data)
-}
-
-func (h *Handler) GetSubgraphForRoot(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
-		errors.HandleHttpError(w, r, errors.NewBadRequestError(err.Error()))
-		return
-	}
-	distance := math.MaxInt
-	if r.URL.Query().Has("distance") {
-		distance, err = strconv.Atoi(r.URL.Query().Get("distance"))
-		if err != nil {
-			errors.HandleHttpError(w, r, errors.NewBadRequestError(err.Error()))
-			return
-		}
-	}
-
-	data, err := h.graphService.GetSubgraphForRootById(id, distance)
-	if err != nil {
-		errors.HandleHttpError(w, r, err)
-		return
-	}
-
-	writeJson(w, data)
-}
