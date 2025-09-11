@@ -1,14 +1,17 @@
 import * as d3 from "d3-hierarchy";
 import type { Selection } from "d3-selection";
+import type { RefObject } from "react";
 
 import { LAYOUT_HEIGHT } from "@/components/FamilyTree/FamilyTree";
 import type { PersonNode } from "@/components/FamilyTree/FamilyTree.service";
+
+export type OnNodeClickFn = (event: any, d: d3.HierarchyPointNode<PersonNode>) => void;
 
 export function updateGraph(
     container: Selection<SVGGElement, any, any, any>,
     descendantNodes: d3.HierarchyPointNode<PersonNode>,
     ancestorNodes: d3.HierarchyPointNode<PersonNode>,
-    onNodeClick: (event: any, d: d3.HierarchyPointNode<PersonNode>) => void,
+    onNodeClick: RefObject<OnNodeClickFn>,
 ) {
     let linkContainer = container.select<SVGGElement>(".link-container");
     if (linkContainer.empty()) {
@@ -75,14 +78,11 @@ const NODE_HEIGHT_HALF = NODE_HEIGHT / 2;
 function createNodes(
     container: Selection<SVGGElement, any, any, any>,
     data: d3.HierarchyPointNode<PersonNode>[],
-    onNodeClick: (event: any, d: d3.HierarchyPointNode<PersonNode>) => void,
+    onNodeClick: RefObject<OnNodeClickFn>,
 ) {
     const nodes = container
         .selectAll<SVGGElement, d3.HierarchyPointNode<PersonNode>>(".node")
-        .data(data, (d) => {
-            console.log(d.data);
-            return d.data.Id;
-        });
+        .data(data, (d) => d.data.Id);
 
     nodes.exit().transition().duration(500).style("opacity", 0).remove();
 
@@ -128,7 +128,7 @@ function createNodes(
             }
         })
         .attr("stroke-width", 8)
-        .on("click", onNodeClick);
+        .on("click", (event, d) => onNodeClick.current(event, d));
 
     node.append("text")
         .attr("x", 150 - NODE_WIDTH_HALF)

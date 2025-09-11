@@ -18,9 +18,9 @@ enum FamilyTreeActions {
 }
 
 function familyTreeReducer(
-    state: ApiData<FamilyTreeDto>,
+    state: ApiData<Record<string, FamilyTreeDto>>,
     action: ContextAction<FamilyTreeDto, FamilyTreeActions>,
-): ApiData<FamilyTreeDto> {
+): ApiData<Record<string, FamilyTreeDto>> {
     switch (action.type) {
         case FamilyTreeActions.FETCH_START:
             return { ...state, loading: true };
@@ -28,7 +28,7 @@ function familyTreeReducer(
             return {
                 ...state,
                 loading: false,
-                data: action.payload,
+                data: { ...(state.data ?? {}), [action.payload!.Root.Id]: action.payload! },
                 error: undefined,
             };
         case FamilyTreeActions.FETCH_ERROR:
@@ -36,7 +36,6 @@ function familyTreeReducer(
                 ...state,
                 loading: false,
                 error: action.error,
-                data: undefined,
             };
         default:
             return state;
@@ -44,14 +43,13 @@ function familyTreeReducer(
 }
 
 type FamilyTreeContextType = {
-    state: ApiData<FamilyTreeDto>;
+    state: ApiData<Record<string, FamilyTreeDto>>;
     getFamilyTree: (id: string, distance?: number) => Promise<void>;
 };
 
 const FamilyTreeContext = createContext<FamilyTreeContextType | undefined>(undefined);
 
-// TODO extend to cache multiple family trees with different roots
-const initialState: ApiData<FamilyTreeDto> = {
+const initialState: ApiData<Record<string, FamilyTreeDto>> = {
     data: undefined,
     loading: undefined,
     error: undefined,
@@ -63,6 +61,9 @@ export function FamilyTreeProvider({ children }: PropsWithChildren) {
 
     const getFamilyTree = useCallback(
         async (id: string, distance?: number) => {
+            if (state.data?.[id] != null) {
+                return;
+            }
             dispatch({ type: FamilyTreeActions.FETCH_START });
             try {
                 const data = await api
@@ -76,7 +77,7 @@ export function FamilyTreeProvider({ children }: PropsWithChildren) {
                 dispatch({ type: FamilyTreeActions.FETCH_ERROR, error: err });
             }
         },
-        [api],
+        [api, state.data],
     );
 
     const value = useMemo(() => ({ state, getFamilyTree: getFamilyTree }), [getFamilyTree, state]);

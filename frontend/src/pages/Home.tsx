@@ -4,6 +4,9 @@ import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider";
 import FamilyTree from "@/components/FamilyTree";
 import { useLoading } from "@/components/Loading";
 
+// TODO initial node via login?
+const ID_TO_QUERY = "01992bc2-416b-73d9-abe5-830fc8b141d8";
+
 function Home() {
     const { state, getFamilyTree } = useApiFamilyTree();
     const { showLoading, hideLoading } = useLoading();
@@ -11,8 +14,7 @@ function Home() {
     useEffect(() => {
         if (!state.data && !state.loading) {
             showLoading(true);
-            // TODO initial node via login?
-            getFamilyTree("01992bc2-416b-73d9-abe5-830fc8b141d8").then(() => hideLoading());
+            getFamilyTree(ID_TO_QUERY).then(() => hideLoading());
         }
     }, [getFamilyTree, hideLoading, showLoading, state]);
 
@@ -20,7 +22,7 @@ function Home() {
 
     return (
         <main className="full-wo-header-height w-full">
-            <FamilyTree familyTree={state.data} />
+            <FamilyTree initialId={ID_TO_QUERY} />
         </main>
     );
 }

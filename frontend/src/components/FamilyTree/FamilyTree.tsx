@@ -3,38 +3,52 @@ import "./FamilyTree.css";
 import * as d3 from "d3-hierarchy";
 import { select, type Selection } from "d3-selection";
 import { zoom, zoomIdentity } from "d3-zoom";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider";
 import { buildHourglassTree, type PersonNode } from "@/components/FamilyTree/FamilyTree.service";
-import { updateGraph } from "@/components/FamilyTree/FamilyTree.svg";
+import { type OnNodeClickFn, updateGraph } from "@/components/FamilyTree/FamilyTree.svg";
 import { useLoading } from "@/components/Loading";
 import type { FamilyTreeDto } from "@/types/dto";
 
 type FamilyTreeProps = {
-    familyTree: FamilyTreeDto;
+    initialId: string;
 };
 
 export const LAYOUT_WIDTH = 350;
 export const LAYOUT_HEIGHT = 200;
 
-const FamilyTree = ({ familyTree }: FamilyTreeProps) => {
-    const ref = useRef<SVGSVGElement>(null);
-    // const containerRef = useRef<SVGGElement>(null);
-    const containerRef = useRef<Selection<SVGGElement, any, any, any>>(undefined);
-    const zoomRef = useRef<{ x: number; y: number; k: number }>(undefined);
+const FamilyTree = ({ initialId }: FamilyTreeProps) => {
+    const [curId, setCurId] = useState(initialId);
+    const [familyTree, setFamilyTree] = useState<FamilyTreeDto>();
 
-    const { getFamilyTree } = useApiFamilyTree();
+    const ref = useRef<SVGSVGElement>(null);
+    const containerRef = useRef<Selection<SVGGElement, any, any, any>>(undefined);
+    const onNodeClickRef = useRef<OnNodeClickFn>(() => {});
+
+    const { state, getFamilyTree } = useApiFamilyTree();
     const { showLoading, hideLoading } = useLoading();
 
-    const changeRoot = useCallback(
-        async (id: string) => {
+    const onNodeClick = useCallback(
+        async (_event: any, d: d3.HierarchyPointNode<PersonNode>) => {
+            const id = d.data.Id;
             showLoading();
             await getFamilyTree(id);
             hideLoading();
+            setCurId(id);
         },
         [getFamilyTree, hideLoading, showLoading],
     );
+
+    useEffect(() => {
+        onNodeClickRef.current = onNodeClick;
+    }, [onNodeClick]);
+
+    useEffect(() => {
+        if (state.data![curId] != null) {
+            setFamilyTree(state.data![curId]);
+        }
+    }, [curId, state.data]);
 
     useEffect(() => {
         if (!ref.current || !familyTree) return;
@@ -53,24 +67,18 @@ const FamilyTree = ({ familyTree }: FamilyTreeProps) => {
         const ancestorNodes = treeLayout(ancestorRoot);
         ancestorNodes.descendants().forEach((node) => (node.y = -node.y));
 
-        if (zoomRef.current == null) {
-            const { width, height } = svgElement.getBoundingClientRect();
-            zoomRef.current = { x: width / 2, y: height / 2, k: 1 };
-        }
-        const initialTransform = zoomIdentity
-            .translate(zoomRef.current.x, zoomRef.current.y)
-            .scale(zoomRef.current.k);
-
-        // Prepare zoom
-        const zoomBehavior = zoom<SVGSVGElement, unknown>()
-            .scaleExtent([0.1, 4])
-            .on("zoom", (zoomEvent) => {
-                zoomRef.current = zoomEvent.transform;
-                svg.select("g").attr("transform", zoomEvent.transform);
-            });
-
         if (!containerRef.current) {
             containerRef.current = svg.append("g").attr("class", "family-tree");
+
+            // Prepare zoom
+            const zoomBehavior = zoom<SVGSVGElement, unknown>()
+                .scaleExtent([0.1, 4])
+                .on("zoom", (zoomEvent) => {
+                    svg.select("g").attr("transform", zoomEvent.transform);
+                });
+            const { width, height } = svgElement.getBoundingClientRect();
+            const initialTransform = zoomIdentity.translate(width / 2, height / 2).scale(1);
+
             // Apply zoom
             svg.call(zoomBehavior)
                 .on("dblclick.zoom", null)
@@ -78,16 +86,8 @@ const FamilyTree = ({ familyTree }: FamilyTreeProps) => {
         }
 
         // Enter new nodes, move updated nodes, delete old nodes
-        updateGraph(containerRef.current, descendantNodes, ancestorNodes, (_event, d) => {
-            const scale = zoomRef.current!.k;
-            zoomRef.current = {
-                x: zoomRef.current!.x + d.x * scale,
-                y: zoomRef.current!.y + d.y * scale,
-                k: zoomRef.current!.k,
-            };
-            changeRoot(d.data.Id);
-        });
-    }, [familyTree, changeRoot]); // Re-run if data change
+        updateGraph(containerRef.current, descendantNodes, ancestorNodes, onNodeClickRef);
+    }, [familyTree, onNodeClick]); // Re-run if data change
 
     return (
         <div className="h-full w-full overflow-hidden">
