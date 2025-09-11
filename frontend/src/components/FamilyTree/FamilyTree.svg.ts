@@ -1,11 +1,12 @@
-import type { Selection } from "d3-selection";
+import { select, type Selection } from "d3-selection";
 import type { RefObject } from "react";
 
-import { LAYOUT_HEIGHT } from "@/components/FamilyTree/FamilyTree";
+import { LAYOUT_HEIGHT, LAYOUT_WIDTH } from "@/components/FamilyTree/FamilyTree";
 import type {
     MinHierarchyLink,
     MinHierarchyNode,
     PersonNode,
+    SpouseLink,
 } from "@/components/FamilyTree/FamilyTree.service";
 
 export type OnNodeClickFn = (event: any, d: MinHierarchyNode<PersonNode>) => void;
@@ -34,27 +35,120 @@ function createLines(
     data: MinHierarchyLink<PersonNode>[],
 ) {
     const links = container
-        .selectAll<SVGPolylineElement, MinHierarchyLink<PersonNode>>(".link")
-        .data(data, (d) => d.target.data.Id);
+        .selectAll<SVGGElement, MinHierarchyLink<PersonNode>>(".link")
+        .data(data, combineIdsOfLink);
 
     links.exit().transition().duration(500).style("opacity", 0).remove();
 
     const link = links
         .enter()
-        .append("polyline")
-        .attr("class", (d) => `link ${d.target.data.type}`)
-        .attr("points", calculatePoints)
-        .attr("fill", "none")
-        .attr("stroke", "#858585")
-        .attr("stroke-width", 3)
+        .append("g")
+        .attr("class", (d) => `link ${d.target.data.type} ${d.data?.type ?? ""}`)
         .attr("opacity", 0);
 
-    link.merge(links)
+    const linkMerge = link
+        .merge(links)
         .transition()
         .duration(500)
         .style("opacity", 1)
-        .attr("class", (d) => `link ${d.target.data.type}`)
-        .attr("points", calculatePoints);
+        .attr("class", (d) => `link ${d.target.data.type} ${d.data?.type ?? ""}`);
+
+    linkMerge.each(function (datum) {
+        const g = select(this);
+
+        const lines = g
+            .selectAll<SVGPolylineElement, MinHierarchyLink<PersonNode>>("polyline")
+            .data([datum], combineIdsOfLink);
+
+        lines.exit().transition().duration(500).style("opacity", 0).remove();
+
+        const line = lines
+            .enter()
+            .append("polyline")
+            .attr("class", (d) => `link ${d.target.data.type} ${d.data?.type ?? ""}`)
+            .attr("opacity", 0)
+            .attr("points", calculatePoints)
+            .attr("fill", "none")
+            .attr("stroke", "#858585")
+            .attr("stroke-width", 3)
+            .attr("stroke-dasharray", (d) => (d.data?.type === "spouse" ? "1,3" : ""));
+
+        line.merge(lines)
+            .transition()
+            .duration(500)
+            .style("opacity", 1)
+            .attr("class", (d) => `link ${d.target.data.type} ${d.data?.type ?? ""}`)
+            .attr("points", calculatePoints)
+            .attr("stroke-dasharray", (d) => (d.data?.type === "spouse" ? "1,3" : ""));
+
+        const textsSince = g
+            .selectAll<SVGTextElement, MinHierarchyLink<PersonNode, SpouseLink>>("text.since")
+            .data<MinHierarchyLink<PersonNode, SpouseLink>>([datum], combineIdsOfLink);
+
+        textsSince.exit().remove();
+
+        const textSince = textsSince
+            .enter()
+            .append("text")
+            .attr("class", "date since")
+            .attr("x", (d) => {
+                let shiftRight = 0;
+                if (d.target.data.type === "root-spouse") {
+                    shiftRight = (d.data?.nodesInBetween ?? 0) * LAYOUT_WIDTH;
+                }
+                return (d.source.x + d.target.x + shiftRight) / 2;
+            })
+            .attr("y", (d) => (d.source.y + d.target.y) / 2 - 15)
+            .style("opacity", 0)
+            .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "middle")
+            .text((d) => generateLinkDateString(d, "Since"));
+
+        textSince
+            .merge(textsSince)
+            .transition()
+            .duration(500)
+            .style("opacity", 1)
+            .attr("x", (d) => {
+                let shiftRight = 0;
+                if (d.data?.type === "spouse") {
+                    shiftRight = (d.data?.nodesInBetween ?? 0) * LAYOUT_WIDTH;
+                }
+                return (d.source.x + d.target.x + shiftRight) / 2;
+            })
+            .attr("y", (d) => (d.source.y + d.target.y) / 2 - 15)
+            .text((d) => generateLinkDateString(d, "Since"));
+
+        const textsUntil = g
+            .selectAll<SVGTextElement, MinHierarchyLink<PersonNode, SpouseLink>>("text.until")
+            .data<MinHierarchyLink<PersonNode, SpouseLink>>([datum], combineIdsOfLink);
+
+        textsUntil.exit().remove();
+
+        const textUntil = textsUntil
+            .enter()
+            .append("text")
+            .attr("class", "date until")
+            .attr("x", (d) => (d.source.x + d.target.x) / 2)
+            .attr("y", (d) => (d.source.y + d.target.y) / 2 + 15)
+            .style("opacity", 0)
+            .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "middle")
+            .text((d) => generateLinkDateString(d, "Until"));
+
+        textUntil
+            .merge(textsUntil)
+            .transition()
+            .duration(500)
+            .style("opacity", 1)
+            .attr("x", (d) => (d.source.x + d.target.x) / 2)
+            .attr("y", (d) => (d.source.y + d.target.y) / 2 + 15)
+            .text((d) => generateLinkDateString(d, "Until"));
+    });
+}
+
+function combineIdsOfLink(d: MinHierarchyLink<PersonNode>) {
+    return [d.source.data.Id, d.target.data.Id].sort().join("|");
 }
 
 function calculatePoints(d: MinHierarchyLink<PersonNode>): string {
@@ -65,14 +159,40 @@ function calculatePoints(d: MinHierarchyLink<PersonNode>): string {
     const ty = d.target.y;
     const tyHalf = d.target.y - (LAYOUT_HEIGHT / 2) * directionMult;
 
-    if (d.target.data.type === "spouse") {
-        return `${sx},${sy} ${tx},${ty}`;
+    switch (d.data?.type) {
+        case "spouse": {
+            return `${sx},${sy} ${tx},${ty}`;
+        }
+        default:
+            switch (d.target.data.type) {
+                case "descendant-spouse":
+                    return "";
+                default:
+                    return `${sx},${sy} ${sx},${tyHalf} ${tx},${tyHalf} ${tx},${ty}`;
+            }
     }
-
-    return `${sx},${sy} ${sx},${tyHalf} ${tx},${tyHalf} ${tx},${ty}`;
 }
 
-const NODE_WIDTH = 300;
+function generateLinkDateString(
+    link: MinHierarchyLink<PersonNode, SpouseLink>,
+    prefix: "Since" | "Until",
+) {
+    const day = link.data?.[`${prefix}Day` as keyof SpouseLink];
+    const month = link.data?.[`${prefix}Month` as keyof SpouseLink];
+    const year = link.data?.[`${prefix}Year` as keyof SpouseLink];
+
+    if (!day && !month && !year) {
+        return "";
+    }
+
+    const dayStr = day ? day.toString().padStart(2, "0") : "??";
+    const monthStr = month ? month.toString().padStart(2, "0") : "??";
+    const yearStr = year ? year.toString().padStart(4, "0") : "????";
+
+    return `${dayStr}.${monthStr}.${yearStr}`;
+}
+
+const NODE_WIDTH = 250;
 const NODE_HEIGHT = 105;
 const NODE_WIDTH_HALF = NODE_WIDTH / 2;
 const NODE_HEIGHT_HALF = NODE_HEIGHT / 2;
@@ -122,7 +242,7 @@ function createNodes(
         .on("click", (event, d) => onNodeClick.current(event, d));
 
     node.append("text")
-        .attr("x", 150 - NODE_WIDTH_HALF)
+        .attr("x", 0)
         .attr("y", 20 - NODE_HEIGHT_HALF)
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "middle")
@@ -140,12 +260,12 @@ function createNodes(
         .attr("dominant-baseline", "text-before-edge")
         .text("Geburtstag:");
     node.append("text")
-        .attr("x", 120 - NODE_WIDTH_HALF)
-        .attr("y", 50 - NODE_HEIGHT_HALF)
+        .attr("x", 130 - NODE_WIDTH_HALF)
+        .attr("y", 51 - NODE_HEIGHT_HALF)
         .attr("class", "date")
         .attr("text-anchor", "start")
         .attr("dominant-baseline", "text-before-edge")
-        .text((d) => generateDateString(d, "Birth"));
+        .text((d) => generateNodeDateString(d, "Birth"));
 
     node.append("text")
         .attr("x", 20 - NODE_WIDTH_HALF)
@@ -154,12 +274,12 @@ function createNodes(
         .attr("dominant-baseline", "text-before-edge")
         .text((d) => (d.data.IsDead ? "Todestag:" : ""));
     node.append("text")
-        .attr("x", 120 - NODE_WIDTH_HALF)
-        .attr("y", 70 - NODE_HEIGHT_HALF)
+        .attr("x", 130 - NODE_WIDTH_HALF)
+        .attr("y", 71 - NODE_HEIGHT_HALF)
         .attr("class", "date")
         .attr("text-anchor", "start")
         .attr("dominant-baseline", "text-before-edge")
-        .text((d) => (d.data.IsDead ? generateDateString(d, "Death") : ""));
+        .text((d) => (d.data.IsDead ? generateNodeDateString(d, "Death") : ""));
 }
 
 function getClassIsDead(node: MinHierarchyNode<PersonNode>) {
@@ -173,7 +293,7 @@ function getClassIsDead(node: MinHierarchyNode<PersonNode>) {
     }
 }
 
-function generateDateString(node: MinHierarchyNode<PersonNode>, prefix: "Birth" | "Death") {
+function generateNodeDateString(node: MinHierarchyNode<PersonNode>, prefix: "Birth" | "Death") {
     const day = node.data[`${prefix}DateDay` as keyof PersonNode];
     const month = node.data[`${prefix}DateMonth` as keyof PersonNode];
     const year = node.data[`${prefix}DateYear` as keyof PersonNode];

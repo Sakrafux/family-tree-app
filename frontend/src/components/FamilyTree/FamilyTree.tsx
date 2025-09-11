@@ -8,6 +8,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider";
 import {
     buildHourglassTree,
+    createAncestorSpouseLink,
+    createDescendantSpouseLinks,
     createSiblingLinks,
     createSiblingNodes,
     createSpouseLinks,
@@ -19,7 +21,7 @@ import { type OnNodeClickFn, updateGraph } from "@/components/FamilyTree/FamilyT
 import { useLoading } from "@/components/Loading";
 import type { FamilyTreeDto } from "@/types/dto";
 
-export const LAYOUT_WIDTH = 350;
+export const LAYOUT_WIDTH = 400;
 export const LAYOUT_HEIGHT = 200;
 
 type FamilyTreeProps = {
@@ -93,16 +95,20 @@ const FamilyTree = ({ initialId }: FamilyTreeProps) => {
                 .call(zoomBehavior.transform, initialTransform);
         }
 
-        const rootNode = descendantNodes;
+        const rootNodeDescendant = descendantNodes;
+        const rootNodeAncestor = ancestorNodes;
 
         const siblingNodes = createSiblingNodes(familyTree);
-        const siblingLinks = createSiblingLinks(rootNode, siblingNodes);
+        const siblingLinks = createSiblingLinks(rootNodeDescendant, siblingNodes);
 
         const spouseNodes = createSpouseNodes(familyTree);
-        const spouseLinks = createSpouseLinks(rootNode, spouseNodes);
+        const spouseLinks = createSpouseLinks(rootNodeDescendant, spouseNodes);
+
+        const descendantSpouseLinks = createDescendantSpouseLinks(rootNodeDescendant);
+        const ancestorSpouseLinks = createAncestorSpouseLink(rootNodeAncestor);
 
         const nodes = [
-            rootNode,
+            rootNodeDescendant,
             ...descendantNodes.descendants().slice(1),
             ...ancestorNodes.descendants().slice(1),
             ...siblingNodes,
@@ -113,6 +119,8 @@ const FamilyTree = ({ initialId }: FamilyTreeProps) => {
             ...ancestorNodes.links(),
             ...siblingLinks,
             ...spouseLinks,
+            ...descendantSpouseLinks,
+            ...ancestorSpouseLinks,
         ];
 
         // Enter new nodes, move updated nodes, delete old nodes

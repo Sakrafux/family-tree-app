@@ -1,11 +1,15 @@
+import * as d3 from "d3-hierarchy";
+
 import { LAYOUT_WIDTH } from "@/components/FamilyTree/FamilyTree";
-import type { FamilyTreeDto, PersonDto } from "@/types/dto";
+import type { FamilyTreeDto, PersonDto, SpouseDto } from "@/types/dto";
 
 export type PersonNode = PersonDto & {
     // Necessary naming for d3
     children: PersonDto[];
-    type: "ancestor" | "descendant" | "root" | "sibling" | "spouse";
+    type: "ancestor" | "descendant" | "root" | "sibling" | "root-spouse" | "descendant-spouse";
 };
+
+export type SpouseLink = Omit<SpouseDto, "Id">;
 
 export type MinHierarchyNode<T> = {
     x: number;
@@ -14,9 +18,10 @@ export type MinHierarchyNode<T> = {
     data: T;
 };
 
-export type MinHierarchyLink<T> = {
+export type MinHierarchyLink<T, D = object> = {
     source: MinHierarchyNode<T>;
     target: MinHierarchyNode<T>;
+    data?: D & { type: "spouse"; nodesInBetween?: number };
 };
 
 export function buildDescendantTree(familyTree: FamilyTreeDto, id: string): PersonNode {
@@ -27,7 +32,15 @@ export function buildDescendantTree(familyTree: FamilyTreeDto, id: string): Pers
 
     const node: PersonNode = { ...rootPerson, children: children, type: "descendant" };
     if (children.length) {
-        node.children = children.map((child) => buildDescendantTree(familyTree, child.Id));
+        node.children = children.flatMap((child) => {
+            const childNode = buildDescendantTree(familyTree, child.Id);
+            const spouses = child.Spouses.map((spouse) => ({
+                ...familyTree.Persons[spouse.Id],
+                children: [],
+                type: "descendant-spouse",
+            }));
+            return [childNode, ...spouses];
+        });
     }
 
     return node;
@@ -96,7 +109,7 @@ export function createSpouseNodes(familyTree: FamilyTreeDto): MinHierarchyNode<P
         }
         const x = (i + 1) * LAYOUT_WIDTH;
         return {
-            data: { ...spouse, children: [], type: "spouse" },
+            data: { ...spouse, children: [], type: "root-spouse" },
             x,
             y: 0,
             depth: 0,
@@ -108,9 +121,86 @@ export function createSpouseLinks(
     rootNode: MinHierarchyNode<PersonNode>,
     spouseNodes: MinHierarchyNode<PersonNode>[],
 ): MinHierarchyLink<PersonNode>[] {
-    return spouseNodes.map((spouseNode) => ({ source: rootNode, target: spouseNode }));
+    return spouseNodes.map((spouseNode, i) => {
+        const spouseDto = rootNode.data.Spouses.find((spouse) => spouse.Id === spouseNode.data.Id)!;
+
+        return {
+            source: rootNode,
+            target: spouseNode,
+            data: { type: "spouse", nodesInBetween: i, ...spouseDto },
+        };
+    });
 }
 
-// TODO ancestor (descendant?) spousal links
+export function createDescendantSpouseLinks(
+    rootNode: d3.HierarchyPointNode<PersonNode>,
+): MinHierarchyLink<PersonNode>[] {
+    const links: MinHierarchyLink<PersonNode, SpouseLink>[] = [];
+
+    const queue: d3.HierarchyPointNode<PersonNode>[] = [rootNode];
+    while (queue.length > 0) {
+        const node = queue.shift();
+
+        const children = node!.children ?? [];
+        queue.push(...children);
+
+        const childMap = Object.fromEntries(children.map((child) => [child.data.Id, child]));
+        children.forEach((child) => {
+            if (child.data.type === "descendant" && child.data.Spouses.length > 0) {
+                child.data.Spouses.map((spouse, i) => ({
+                    spouseNode: childMap[spouse.Id],
+                    spouseDto: spouse,
+                    i,
+                }))
+                    .filter((spouse) => spouse != null && spouse.spouseNode != null)
+                    .forEach(({ spouseNode, spouseDto, i }) => {
+                        links.push({
+                            source: spouseNode,
+                            target: child,
+                            data: { type: "spouse", nodesInBetween: i, ...spouseDto },
+                        });
+                    });
+            }
+        });
+    }
+
+    return links;
+}
+
+export function createAncestorSpouseLink(
+    rootNode: d3.HierarchyPointNode<PersonNode>,
+): MinHierarchyLink<PersonNode>[] {
+    const links: MinHierarchyLink<PersonNode, SpouseLink>[] = [];
+
+    const queue: d3.HierarchyPointNode<PersonNode>[] = [rootNode];
+    while (queue.length > 0) {
+        const node = queue.shift();
+
+        const parents = node!.children ?? [];
+        queue.push(...parents);
+
+        const parentMap = Object.fromEntries(parents.map((parent) => [parent.data.Id, parent]));
+        const alreadyPaired: Record<string, boolean> = {};
+        parents.forEach((parent) => {
+            const { spouseNode, spouseDto } = [
+                ...parent.data.Spouses.map((spouse) => ({
+                    spouseNode: parentMap[spouse.Id],
+                    spouseDto: spouse,
+                })).filter((spouse) => spouse != null && !alreadyPaired[spouse.spouseDto.Id]),
+                {},
+            ][0];
+            if (spouseNode != null) {
+                links.push({
+                    source: spouseNode,
+                    target: parent,
+                    data: { type: "spouse", ...spouseDto },
+                });
+                alreadyPaired[parent.data.Id] = true;
+            }
+        });
+    }
+
+    return links;
+}
+
 // TODO uncles/aunts as fake ancestors (+ links)
-// TODO child spouses as fake descendants (+ links)

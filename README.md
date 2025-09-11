@@ -10,3 +10,4 @@
   - center view
   - jump to selection
   - zoom-in/out
+- search view
