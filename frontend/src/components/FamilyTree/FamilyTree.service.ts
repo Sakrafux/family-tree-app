@@ -121,15 +121,19 @@ export function createSpouseLinks(
     rootNode: MinHierarchyNode<PersonNode>,
     spouseNodes: MinHierarchyNode<PersonNode>[],
 ): MinHierarchyLink<PersonNode>[] {
-    return spouseNodes.map((spouseNode, i) => {
-        const spouseDto = rootNode.data.Spouses.find((spouse) => spouse.Id === spouseNode.data.Id)!;
+    return spouseNodes
+        .map((spouseNode, i) => {
+            const spouseDto = rootNode.data.Spouses.find(
+                (spouse) => spouse.Id === spouseNode.data.Id,
+            )!;
 
-        return {
-            source: rootNode,
-            target: spouseNode,
-            data: { type: "spouse", nodesInBetween: i, ...spouseDto },
-        };
-    });
+            return {
+                source: rootNode,
+                target: spouseNode,
+                data: { type: "spouse", nodesInBetween: i, ...spouseDto },
+            };
+        })
+        .reverse() as MinHierarchyLink<PersonNode>[];
 }
 
 export function createDescendantSpouseLinks(
@@ -164,7 +168,7 @@ export function createDescendantSpouseLinks(
         });
     }
 
-    return links;
+    return links.reverse();
 }
 
 export function createAncestorSpouseLink(

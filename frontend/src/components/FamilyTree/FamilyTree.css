@@ -2,7 +2,7 @@
     cursor: pointer;
 }
 
-.node text {
+text {
     pointer-events: none;
 }
 
