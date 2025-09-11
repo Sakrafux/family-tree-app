@@ -1,7 +1,7 @@
 import { createContext, type PropsWithChildren, useContext } from "react";
 import axios, { type AxiosInstance } from "axios";
 
-const ApiContext = createContext<AxiosInstance>(axios.create());
+const ApiContext = createContext<AxiosInstance | undefined>(undefined);
 
 export function ApiProvider({ children }: PropsWithChildren) {
     const api = axios.create({
@@ -29,5 +29,9 @@ export function ApiProvider({ children }: PropsWithChildren) {
 }
 
 export function useApi() {
-    return useContext(ApiContext);
+    const context = useContext(ApiContext);
+    if (!context) {
+        throw new Error("useApi must be used within a ApiProvider");
+    }
+    return context;
 }

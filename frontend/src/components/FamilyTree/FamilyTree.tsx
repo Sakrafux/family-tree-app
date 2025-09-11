@@ -10,6 +10,7 @@ import type { FamilyTreeDto } from "@/types/dto.ts";
 import { fillGraph } from "@/components/FamilyTree/FamilyTree.svg.ts";
 import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider.tsx";
 import "./FamilyTree.css";
+import { useLoading } from "@/components/Loading.tsx";
 
 type FamilyTreeProps = {
     familyTree: FamilyTreeDto;
@@ -23,10 +24,13 @@ const FamilyTree = ({ familyTree }: FamilyTreeProps) => {
     const curZoom = useRef<{ x: number; y: number; k: number }>(undefined);
 
     const { getFamilyTree } = useApiFamilyTree();
+    const { showLoading, hideLoading } = useLoading();
 
     const changeRoot = useCallback(
-        (id: string) => {
-            getFamilyTree(id);
+        async (id: string) => {
+            showLoading();
+            await getFamilyTree(id);
+            hideLoading();
         },
         [getFamilyTree],
     );
@@ -73,7 +77,9 @@ const FamilyTree = ({ familyTree }: FamilyTreeProps) => {
         // Create root graph element
         const g = svg.append("g");
         // Apply zoom
-        svg.call(zoomBehavior).call(zoomBehavior.transform, initialTransform);
+        svg.call(zoomBehavior)
+            .on("dblclick.zoom", null)
+            .call(zoomBehavior.transform, initialTransform);
 
         // Fill graph with all new nodes
         fillGraph(g, descendantNodes, ancestorNodes, (_event, d) => {

@@ -42,18 +42,21 @@ function familyTreeReducer(
     }
 }
 
+type FamilyTreeContextType = {
+    state: ApiData<FamilyTreeDto>;
+    getFamilyTree: (id: string, distance?: number) => Promise<void>;
+};
+
+const FamilyTreeContext = createContext<FamilyTreeContextType | undefined>(
+    undefined,
+);
+
 // TODO extend to cache multiple family trees with different roots
 const initialState: ApiData<FamilyTreeDto> = {
     data: undefined,
     loading: undefined,
     error: undefined,
 };
-
-const FamilyTreeContext = createContext({
-    state: initialState,
-    // @ts-expect-error TS6133
-    getFamilyTree: (id: string, distance?: number) => Promise.resolve(),
-});
 
 export function FamilyTreeProvider({ children }: PropsWithChildren) {
     const [state, dispatch] = useReducer(familyTreeReducer, initialState);
@@ -90,5 +93,11 @@ export function FamilyTreeProvider({ children }: PropsWithChildren) {
 }
 
 export function useApiFamilyTree() {
-    return useContext(FamilyTreeContext);
+    const context = useContext(FamilyTreeContext);
+    if (!context) {
+        throw new Error(
+            "useApiFamilyTree must be used within a FamilyTreeProvider",
+        );
+    }
+    return context;
 }

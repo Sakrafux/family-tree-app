@@ -5,15 +5,18 @@ import App from "@/App";
 import { ApiProvider } from "@/api/ApiProvider.tsx";
 import { DataProviders } from "@/api/data/Providers.tsx";
 import { BrowserRouter } from "react-router-dom";
+import { LoadingProvider } from "@/components/Loading.tsx";
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <BrowserRouter>
-            <ApiProvider>
-                <DataProviders>
-                    <App />
-                </DataProviders>
-            </ApiProvider>
+            <LoadingProvider>
+                <ApiProvider>
+                    <DataProviders>
+                        <App />
+                    </DataProviders>
+                </ApiProvider>
+            </LoadingProvider>
         </BrowserRouter>
     </StrictMode>,
 );

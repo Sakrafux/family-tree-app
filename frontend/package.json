@@ -16,6 +16,7 @@
     "d3-hierarchy": "^3.1.2",
     "d3-selection": "^3.0.0",
     "d3-zoom": "^3.0.0",
+    "framer-motion": "^12.23.12",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.8.2",
