@@ -45,8 +45,8 @@ function createLines(
         .attr("class", (d) => `link ${d.target.data.type}`)
         .attr("points", calculatePoints)
         .attr("fill", "none")
-        .attr("stroke", "#ccc")
-        .attr("stroke-width", 2)
+        .attr("stroke", "#858585")
+        .attr("stroke-width", 3)
         .attr("opacity", 0);
 
     link.merge(links)
