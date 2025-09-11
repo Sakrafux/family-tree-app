@@ -225,7 +225,8 @@ function createNodes(
         .attr("transform", (d) => `translate(${d.x},${d.y})`)
         .attr("opacity", 0);
 
-    node.merge(nodes)
+    const nodeMerge = node
+        .merge(nodes)
         .transition()
         .duration(TRANSITION_DURATION)
         .style("opacity", 1)
@@ -290,6 +291,70 @@ function createNodes(
         .attr("text-anchor", "start")
         .attr("dominant-baseline", "text-before-edge")
         .text((d) => (d.data.IsDead ? generateNodeDateString(d, "Death") : ""));
+
+    nodeMerge
+        .filter((d) => d.data.Siblings.length > 0)
+        .each(function (datum) {
+            const siblingGroups = select(this)
+                .selectAll<SVGGElement, MinHierarchyNode<PersonNode>>("g.sibling-indicator")
+                .data([datum], (d) => d.data.Id);
+
+            siblingGroups.exit().transition().duration(TRANSITION_DURATION).remove();
+
+            const siblingGroup = siblingGroups
+                .enter()
+                .append("g")
+                .attr("class", "sibling-indicator")
+                .attr("transform", (d) => {
+                    let x = -30 - NODE_WIDTH_HALF;
+                    if (d.data.Gender === "f" || d.data.type === "descendant-spouse") {
+                        x = 30 + NODE_WIDTH_HALF;
+                    }
+                    const y = 0;
+                    return `translate(${x},${y})`;
+                })
+                .attr("opacity", 0);
+
+            siblingGroup
+                .merge(siblingGroups)
+                .transition()
+                .duration(TRANSITION_DURATION)
+                .attr("class", "sibling-indicator")
+                .attr("transform", (d) => {
+                    let x = -30 - NODE_WIDTH_HALF;
+                    if (d.data.Gender === "f" || d.data.type === "descendant-spouse") {
+                        x = 30 + NODE_WIDTH_HALF;
+                    }
+                    const y = 0;
+                    return `translate(${x},${y})`;
+                })
+                .attr("opacity", (d) =>
+                    d.data.type === "ancestor" || d.data.type === "descendant-spouse" ? 1 : 0,
+                );
+
+            siblingGroup
+                .append("path")
+                .attr("d", "M60 16 28 48 60 80")
+                .attr(
+                    "transform",
+                    (d) =>
+                        `translate(${d.data.Gender === "m" ? -60 : 60},-50) scale(${d.data.Gender === "m" ? 1 : -1},1)`,
+                )
+                .attr("stroke-linecap", "round")
+                .attr("stroke-linejoin", "round")
+                .attr("fill", "none")
+                .attr("stroke", "#616161")
+                .attr("stroke-width", 4);
+
+            siblingGroup
+                .append("text")
+                .attr("text-anchor", "middle")
+                .attr("dominant-baseline", "middle")
+                .attr("font-size", "24")
+                .attr("font-weight", "bold")
+                .attr("font-color", "#616161")
+                .text((d) => d.data.Siblings.length);
+        });
 }
 
 function getClassIsDead(node: MinHierarchyNode<PersonNode>) {

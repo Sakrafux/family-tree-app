@@ -1,17 +1,41 @@
-.node {
-    cursor: pointer;
-}
-
 text {
     pointer-events: none;
 }
 
 .node rect {
     transition: filter 0.3s ease;
+    cursor: pointer;
 }
 
-.node:hover rect {
+.node rect:hover {
     filter: brightness(1.25) drop-shadow(0px 0px 6px rgba(0, 0, 0, 0.4));
+}
+
+.node.alive rect {
+    filter: drop-shadow(0px 0px 10px rgba(0, 255, 0, 0.7));
+}
+
+.node.alive rect:hover {
+    filter: brightness(1.25) drop-shadow(0px 0px 6px rgba(0, 0, 0, 0.4))
+        drop-shadow(0px 0px 10px rgba(0, 255, 0, 0.7));
+}
+
+.node.dead rect {
+    filter: drop-shadow(0px 0px 10px rgba(255, 0, 0, 0.7));
+}
+
+.node.dead rect:hover {
+    filter: brightness(1.25) drop-shadow(0px 0px 6px rgba(0, 0, 0, 0.4))
+        drop-shadow(0px 0px 10px rgba(255, 0, 0, 0.7));
+}
+
+.node.alive-dead-unknown rect {
+    filter: drop-shadow(0px 0px 10px rgba(0, 0, 255, 0.7));
+}
+
+.node.alive-dead-unknown rect:hover {
+    filter: brightness(1.25) drop-shadow(0px 0px 6px rgba(0, 0, 0, 0.4))
+        drop-shadow(0px 0px 10px rgba(0, 0, 255, 0.7));
 }
 
 .node.root {
@@ -24,19 +48,11 @@ text {
     stroke-width: 8px;
 }
 
-.node.alive {
-    filter: drop-shadow(0px 0px 10px rgba(0, 255, 0, 0.7));
-}
-
-.node.dead {
-    filter: drop-shadow(0px 0px 10px rgba(255, 0, 0, 0.7));
-}
-
-.node.alive-dead-unknown {
-    filter: drop-shadow(0px 0px 10px rgba(0, 0, 255, 0.7));
-}
-
 text.date {
     font-family: monospace;
     font-size: 18px;
+}
+
+g.sibling-indicator text {
+    fill: #616161;
 }

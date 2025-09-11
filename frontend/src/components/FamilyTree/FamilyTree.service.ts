@@ -206,5 +206,3 @@ export function createAncestorSpouseLink(
 
     return links;
 }
-
-// TODO uncles/aunts as fake ancestors (+ links)
