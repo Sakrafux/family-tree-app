@@ -51,31 +51,31 @@ const initialState: ApiData<FamilyTreeDto> = {
 
 const FamilyTreeContext = createContext({
     state: initialState,
-    getFamilyTree: () => Promise.resolve(),
+    // @ts-expect-error TS6133
+    getFamilyTree: (id: string, distance?: number) => Promise.resolve(),
 });
 
 export function FamilyTreeProvider({ children }: PropsWithChildren) {
     const [state, dispatch] = useReducer(familyTreeReducer, initialState);
     const api = useApi();
 
-    //TODO extend with id parameter
-    const getFamilyTree = useCallback(async () => {
-        dispatch({ type: FamilyTreeActions.FETCH_START });
-        try {
-            const data = await api
-                .get(
-                    // "/family-tree/01992bc2-416b-73d9-abe5-6b28c928dc85?distance=10",
-                    "/family-tree/01992bc2-416b-73d9-abe5-830fc8b141d8?distance=10",
-                )
-                .then((res) => res.data);
-            dispatch({
-                type: FamilyTreeActions.FETCH_SUCCESS,
-                payload: data,
-            });
-        } catch (err) {
-            dispatch({ type: FamilyTreeActions.FETCH_ERROR, error: err });
-        }
-    }, [dispatch]);
+    const getFamilyTree = useCallback(
+        async (id: string, distance?: number) => {
+            dispatch({ type: FamilyTreeActions.FETCH_START });
+            try {
+                const data = await api
+                    .get(`/family-tree/${id}`, { params: { distance } })
+                    .then((res) => res.data);
+                dispatch({
+                    type: FamilyTreeActions.FETCH_SUCCESS,
+                    payload: data,
+                });
+            } catch (err) {
+                dispatch({ type: FamilyTreeActions.FETCH_ERROR, error: err });
+            }
+        },
+        [dispatch],
+    );
 
     const value = useMemo(
         () => ({ state, getFamilyTree: getFamilyTree }),

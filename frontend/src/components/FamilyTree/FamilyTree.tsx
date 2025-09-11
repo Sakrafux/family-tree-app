@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import * as d3 from "d3-hierarchy";
 import { select } from "d3-selection";
 import { zoom, zoomIdentity } from "d3-zoom";
@@ -8,6 +8,8 @@ import {
 } from "@/components/FamilyTree/FamilyTree.service.ts";
 import type { FamilyTreeDto } from "@/types/dto.ts";
 import { fillGraph } from "@/components/FamilyTree/FamilyTree.svg.ts";
+import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider.tsx";
+import "./FamilyTree.css";
 
 type FamilyTreeProps = {
     familyTree: FamilyTreeDto;
@@ -19,7 +21,14 @@ export const LAYOUT_HEIGHT = 200;
 const FamilyTree = ({ familyTree }: FamilyTreeProps) => {
     const ref = useRef<SVGSVGElement>(null);
 
-    console.log(familyTree);
+    const { getFamilyTree } = useApiFamilyTree();
+
+    const changeRoot = useCallback(
+        (id: string) => {
+            getFamilyTree(id);
+        },
+        [getFamilyTree],
+    );
 
     useEffect(() => {
         if (!ref.current || !familyTree) return;
@@ -51,6 +60,7 @@ const FamilyTree = ({ familyTree }: FamilyTreeProps) => {
                 svg.select("g").attr("transform", zoomEvent.transform);
             });
 
+        // TODO do some transition instead of deleting everything
         // Clear previous graph
         svg.selectAll("*").remove();
 
@@ -59,8 +69,11 @@ const FamilyTree = ({ familyTree }: FamilyTreeProps) => {
         // Apply zoom
         svg.call(zoomBehavior).call(zoomBehavior.transform, initialTransform);
 
-        fillGraph(g, descendantNodes, ancestorNodes);
-    }, [familyTree]); // Re-run if data change
+        // Fill graph with all new nodes
+        fillGraph(g, descendantNodes, ancestorNodes, (_event, d) =>
+            changeRoot(d.data.Id),
+        );
+    }, [familyTree, changeRoot]); // Re-run if data change
 
     return (
         <div className="h-full w-full overflow-hidden">

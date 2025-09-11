@@ -7,11 +7,19 @@ function Home() {
 
     useEffect(() => {
         if (!state.data && !state.loading) {
-            getFamilyTree();
+            // TODO initial node via login?
+            getFamilyTree("01992bc2-416b-73d9-abe5-830fc8b141d8");
         }
     }, [state]);
 
-    if (!state.data) return null;
+    // TODO add special handling for loading, i.e. dont hide canvas but loading overlay or something
+    if (!state.data) {
+        return (
+            <main className="text-container">
+                <h1>Loading...</h1>
+            </main>
+        );
+    }
 
     return (
         <main className="full-wo-header-height w-full">

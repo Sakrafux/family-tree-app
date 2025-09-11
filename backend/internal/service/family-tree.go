@@ -140,13 +140,19 @@ func relateParentsAndChildren(dto *FamilyTreeDto, chParentRelations chan []*db.P
 	// Sort parents and children deterministically
 	for _, person := range dto.Persons {
 		if len(person.Parents) == 2 {
-			if parent1 := dto.Persons[person.Parents[0]]; *parent1.Gender == "f" {
+			if parent1, ok := dto.Persons[person.Parents[0]]; ok && *parent1.Gender == "f" {
 				person.Parents = []uuid.UUID{person.Parents[1], person.Parents[0]}
 			}
 		}
 		slices.SortFunc(person.Children, func(a, b uuid.UUID) int {
-			personA := dto.Persons[a]
-			personB := dto.Persons[b]
+			personA, ok := dto.Persons[a]
+			if !ok {
+				return 0
+			}
+			personB, ok := dto.Persons[b]
+			if !ok {
+				return 0
+			}
 
 			ay, by := derefDateInt32(personA.BirthDateYear), derefDateInt32(personB.BirthDateYear)
 			if ay != by {

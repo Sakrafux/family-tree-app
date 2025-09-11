@@ -7,27 +7,32 @@ export function fillGraph(
     container: Selection<SVGGElement, any, any, any>,
     descendantNodes: d3.HierarchyPointNode<PersonNode>,
     ancestorNodes: d3.HierarchyPointNode<PersonNode>,
+    onNodeClick: (event: any, d: d3.HierarchyPointNode<PersonNode>) => void,
 ) {
     createLines(container, descendantNodes.links(), false, "link-descendant");
     createLines(container, ancestorNodes.links(), true, "link-ancestor");
 
+    // TODO somehow display sibling and spouse nodes as well
     createNodes(
         container,
         descendantNodes.descendants().slice(0, 1),
         false,
         "node-root",
+        () => {},
     );
     createNodes(
         container,
         descendantNodes.descendants().slice(1),
         false,
         "node-descendant",
+        onNodeClick,
     );
     createNodes(
         container,
         ancestorNodes.descendants().slice(1),
         true,
         "node-ancestor",
+        onNodeClick,
     );
 }
 
@@ -71,6 +76,7 @@ function createNodes(
     data: d3.HierarchyPointNode<PersonNode>[],
     inverted: boolean,
     className: string,
+    onNodeClick: (event: any, d: d3.HierarchyPointNode<PersonNode>) => void,
 ) {
     const node = container
         .append("g")
@@ -78,7 +84,7 @@ function createNodes(
         .data(data)
         .enter()
         .append("g")
-        .attr("class", className)
+        .attr("class", `node ${className}`)
         .attr("transform", (d) => `translate(${d.x},${inverted ? -d.y : d.y})`);
 
     node.append("rect")
@@ -88,10 +94,28 @@ function createNodes(
         .attr("height", NODE_HEIGHT)
         .attr("rx", 10)
         .attr("ry", 10)
-        .attr("fill", "#759aff")
-        .on("click", (_event, d) => {
-            console.log("clicked", d);
-        });
+        .attr("fill", (d) => {
+            switch (d.data.Gender) {
+                case "m":
+                    return "#5A7FBF";
+                case "f":
+                    return "#D94F70";
+                default:
+                    return "#E0B75C";
+            }
+        })
+        .attr("stroke", (d) => {
+            switch (d.data.IsDead) {
+                case false:
+                    return "#66BB6A";
+                case true:
+                    return "#6E4B3A";
+                default:
+                    return "#A0A0A0";
+            }
+        })
+        .attr("stroke-width", 4)
+        .on("click", onNodeClick);
 
     node.append("text")
         .attr("x", 150 - NODE_WIDTH_HALF)
