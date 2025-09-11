@@ -1,4 +1,5 @@
 {
     "plugins": ["prettier-plugin-tailwindcss"],
-    "bracketSpacing": true
+    "bracketSpacing": true,
+    "printWidth": 100
 }

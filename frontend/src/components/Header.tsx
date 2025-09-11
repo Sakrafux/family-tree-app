@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import BellSvg from "@/assets/bell.svg?react";
+
 import AvatarSvg from "@/assets/avatar.svg?react";
+import BellSvg from "@/assets/bell.svg?react";
 
 function Header() {
     const isLoggedIn = false;
@@ -9,19 +10,14 @@ function Header() {
         <header className="header-height sticky top-0 bg-white px-6 py-4 shadow-md">
             <div className="text-container flex items-center justify-between">
                 <div className="flex-shrink-0 cursor-default">
-                    <h1 className="text-xl font-bold text-gray-900">
-                        Family Tree
-                    </h1>
+                    <h1 className="text-xl font-bold text-gray-900">Family Tree</h1>
                 </div>
 
                 <nav className="hidden items-center space-x-8 md:flex">
                     <Link to="/" className="text-gray-600 hover:text-gray-900">
                         Home
                     </Link>
-                    <Link
-                        to="/about"
-                        className="text-gray-600 hover:text-gray-900"
-                    >
+                    <Link to="/about" className="text-gray-600 hover:text-gray-900">
                         About
                     </Link>
                 </nav>

@@ -1,7 +1,8 @@
-import type { Selection } from "d3-selection";
 import * as d3 from "d3-hierarchy";
-import type { PersonNode } from "@/components/FamilyTree/FamilyTree.service.ts";
-import { LAYOUT_HEIGHT } from "@/components/FamilyTree/FamilyTree.tsx";
+import type { Selection } from "d3-selection";
+
+import { LAYOUT_HEIGHT } from "@/components/FamilyTree/FamilyTree";
+import type { PersonNode } from "@/components/FamilyTree/FamilyTree.service";
 
 export function fillGraph(
     container: Selection<SVGGElement, any, any, any>,
@@ -13,24 +14,9 @@ export function fillGraph(
     createLines(container, ancestorNodes.links(), true, "link-ancestor");
 
     // TODO somehow display sibling and spouse nodes as well
-    createNodes(
-        container,
-        descendantNodes.descendants().slice(0, 1),
-        "node-root",
-        () => {},
-    );
-    createNodes(
-        container,
-        descendantNodes.descendants().slice(1),
-        "node-descendant",
-        onNodeClick,
-    );
-    createNodes(
-        container,
-        ancestorNodes.descendants().slice(1),
-        "node-ancestor",
-        onNodeClick,
-    );
+    createNodes(container, descendantNodes.descendants().slice(0, 1), "node-root", () => {});
+    createNodes(container, descendantNodes.descendants().slice(1), "node-descendant", onNodeClick);
+    createNodes(container, ancestorNodes.descendants().slice(1), "node-ancestor", onNodeClick);
 }
 
 function createLines(

@@ -1,16 +1,15 @@
-import { useCallback, useEffect, useRef } from "react";
+import "./FamilyTree.css";
+
 import * as d3 from "d3-hierarchy";
 import { select } from "d3-selection";
 import { zoom, zoomIdentity } from "d3-zoom";
-import {
-    buildHourglassTree,
-    type PersonNode,
-} from "@/components/FamilyTree/FamilyTree.service.ts";
-import type { FamilyTreeDto } from "@/types/dto.ts";
-import { fillGraph } from "@/components/FamilyTree/FamilyTree.svg.ts";
-import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider.tsx";
-import "./FamilyTree.css";
-import { useLoading } from "@/components/Loading.tsx";
+import { useCallback, useEffect, useRef } from "react";
+
+import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider";
+import { buildHourglassTree, type PersonNode } from "@/components/FamilyTree/FamilyTree.service";
+import { fillGraph } from "@/components/FamilyTree/FamilyTree.svg";
+import { useLoading } from "@/components/Loading";
+import type { FamilyTreeDto } from "@/types/dto";
 
 type FamilyTreeProps = {
     familyTree: FamilyTreeDto;
@@ -32,7 +31,7 @@ const FamilyTree = ({ familyTree }: FamilyTreeProps) => {
             await getFamilyTree(id);
             hideLoading();
         },
-        [getFamilyTree],
+        [getFamilyTree, hideLoading, showLoading],
     );
 
     useEffect(() => {
@@ -46,9 +45,7 @@ const FamilyTree = ({ familyTree }: FamilyTreeProps) => {
         const descendantRoot = d3.hierarchy(descendantTree);
         const ancestorRoot = d3.hierarchy(ancestorTree);
 
-        const treeLayout = d3
-            .tree<PersonNode>()
-            .nodeSize([LAYOUT_WIDTH, LAYOUT_HEIGHT]);
+        const treeLayout = d3.tree<PersonNode>().nodeSize([LAYOUT_WIDTH, LAYOUT_HEIGHT]);
 
         const descendantNodes = treeLayout(descendantRoot);
         const ancestorNodes = treeLayout(ancestorRoot);

@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import {
     createContext,
     type PropsWithChildren,
@@ -6,7 +7,6 @@ import {
     useRef,
     useState,
 } from "react";
-import { motion } from "framer-motion";
 
 type LoadingContextType = {
     isLoading: boolean;
@@ -37,9 +37,7 @@ export const LoadingProvider = ({ children }: PropsWithChildren) => {
     }, []);
 
     return (
-        <LoadingContext.Provider
-            value={{ isLoading, showLoading, hideLoading }}
-        >
+        <LoadingContext.Provider value={{ isLoading, showLoading, hideLoading }}>
             {children}
             {isLoading && <LoadingOverlay />}
         </LoadingContext.Provider>

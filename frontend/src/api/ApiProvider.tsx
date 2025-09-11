@@ -1,5 +1,5 @@
-import { createContext, type PropsWithChildren, useContext } from "react";
 import axios, { type AxiosInstance } from "axios";
+import { createContext, type PropsWithChildren, useContext } from "react";
 
 const ApiContext = createContext<AxiosInstance | undefined>(undefined);
 

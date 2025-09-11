@@ -1,3 +1,3 @@
-import FamilyTree from "./FamilyTree.tsx";
+import FamilyTree from "./FamilyTree";
 
 export default FamilyTree;

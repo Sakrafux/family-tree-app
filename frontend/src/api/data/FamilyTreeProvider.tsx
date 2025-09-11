@@ -6,9 +6,10 @@ import {
     useMemo,
     useReducer,
 } from "react";
-import { useApi } from "@/api/ApiProvider.tsx";
-import type { ApiData, ContextAction } from "@/types/types.ts";
-import type { FamilyTreeDto } from "@/types/dto.ts";
+
+import { useApi } from "@/api/ApiProvider";
+import type { FamilyTreeDto } from "@/types/dto";
+import type { ApiData, ContextAction } from "@/types/types";
 
 enum FamilyTreeActions {
     FETCH_START = "FETCH_START",
@@ -47,9 +48,7 @@ type FamilyTreeContextType = {
     getFamilyTree: (id: string, distance?: number) => Promise<void>;
 };
 
-const FamilyTreeContext = createContext<FamilyTreeContextType | undefined>(
-    undefined,
-);
+const FamilyTreeContext = createContext<FamilyTreeContextType | undefined>(undefined);
 
 // TODO extend to cache multiple family trees with different roots
 const initialState: ApiData<FamilyTreeDto> = {
@@ -77,27 +76,18 @@ export function FamilyTreeProvider({ children }: PropsWithChildren) {
                 dispatch({ type: FamilyTreeActions.FETCH_ERROR, error: err });
             }
         },
-        [dispatch],
+        [api],
     );
 
-    const value = useMemo(
-        () => ({ state, getFamilyTree: getFamilyTree }),
-        [state],
-    );
+    const value = useMemo(() => ({ state, getFamilyTree: getFamilyTree }), [getFamilyTree, state]);
 
-    return (
-        <FamilyTreeContext.Provider value={value}>
-            {children}
-        </FamilyTreeContext.Provider>
-    );
+    return <FamilyTreeContext.Provider value={value}>{children}</FamilyTreeContext.Provider>;
 }
 
 export function useApiFamilyTree() {
     const context = useContext(FamilyTreeContext);
     if (!context) {
-        throw new Error(
-            "useApiFamilyTree must be used within a FamilyTreeProvider",
-        );
+        throw new Error("useApiFamilyTree must be used within a FamilyTreeProvider");
     }
     return context;
 }
