@@ -4,49 +4,67 @@ import type { Selection } from "d3-selection";
 import { LAYOUT_HEIGHT } from "@/components/FamilyTree/FamilyTree";
 import type { PersonNode } from "@/components/FamilyTree/FamilyTree.service";
 
-export function fillGraph(
+export function updateGraph(
     container: Selection<SVGGElement, any, any, any>,
     descendantNodes: d3.HierarchyPointNode<PersonNode>,
     ancestorNodes: d3.HierarchyPointNode<PersonNode>,
     onNodeClick: (event: any, d: d3.HierarchyPointNode<PersonNode>) => void,
 ) {
-    createLines(container, descendantNodes.links(), false, "link-descendant");
-    createLines(container, ancestorNodes.links(), true, "link-ancestor");
+    let linkContainer = container.select<SVGGElement>(".link-container");
+    if (linkContainer.empty()) {
+        linkContainer = container.append("g").attr("class", "link-container");
+    }
+    let nodeContainer = container.select<SVGGElement>(".node-container");
+    if (nodeContainer.empty()) {
+        nodeContainer = container.append("g").attr("class", "node-container");
+    }
+
+    createLines(linkContainer, [...descendantNodes.links(), ...ancestorNodes.links()]);
 
     // TODO somehow display sibling and spouse nodes as well
-    createNodes(container, descendantNodes.descendants().slice(0, 1), "node-root", () => {});
-    createNodes(container, descendantNodes.descendants().slice(1), "node-descendant", onNodeClick);
-    createNodes(container, ancestorNodes.descendants().slice(1), "node-ancestor", onNodeClick);
+    createNodes(
+        nodeContainer,
+        [...descendantNodes.descendants(), ...ancestorNodes.descendants().slice(1)],
+        onNodeClick,
+    );
 }
 
 function createLines(
     container: Selection<SVGGElement, any, any, any>,
-    links: d3.HierarchyPointLink<PersonNode>[],
-    inverted: boolean,
-    className: string,
+    data: d3.HierarchyPointLink<PersonNode>[],
 ) {
-    const directionMult = inverted ? -1 : 1;
+    const links = container
+        .selectAll<SVGPolylineElement, d3.HierarchyPointLink<PersonNode>>(".link")
+        .data(data, (d) => d.target.data.Id);
 
-    const calculatePoints = (d: d3.HierarchyPointLink<PersonNode>): string => {
-        const sx = d.source.x;
-        const sy = d.source.y;
-        const tx = d.target.x;
-        const ty = d.target.y;
-        const tyHalf = d.target.y - (LAYOUT_HEIGHT / 2) * directionMult;
-        return `${sx},${sy} ${sx},${tyHalf} ${tx},${tyHalf} ${tx},${ty}`;
-    };
+    links.exit().transition().duration(500).style("opacity", 0).remove();
 
-    container
-        .append("g")
-        .selectAll("polyline")
-        .data(links)
+    const link = links
         .enter()
         .append("polyline")
-        .attr("class", className)
+        .attr("class", (d) => `link link-${d.target.data.type}`)
         .attr("points", calculatePoints)
         .attr("fill", "none")
         .attr("stroke", "#ccc")
-        .attr("stroke-width", 2);
+        .attr("stroke-width", 2)
+        .attr("opacity", 0);
+
+    link.merge(links)
+        .transition()
+        .duration(500)
+        .style("opacity", 1)
+        .attr("class", (d) => `link link-${d.target.data.type}`)
+        .attr("points", calculatePoints);
+}
+
+function calculatePoints(d: d3.HierarchyPointLink<PersonNode>): string {
+    const directionMult = d.target.data.type === "ancestor" ? -1 : 1;
+    const sx = d.source.x;
+    const sy = d.source.y;
+    const tx = d.target.x;
+    const ty = d.target.y;
+    const tyHalf = d.target.y - (LAYOUT_HEIGHT / 2) * directionMult;
+    return `${sx},${sy} ${sx},${tyHalf} ${tx},${tyHalf} ${tx},${ty}`;
 }
 
 const NODE_WIDTH = 300;
@@ -57,16 +75,29 @@ const NODE_HEIGHT_HALF = NODE_HEIGHT / 2;
 function createNodes(
     container: Selection<SVGGElement, any, any, any>,
     data: d3.HierarchyPointNode<PersonNode>[],
-    className: string,
     onNodeClick: (event: any, d: d3.HierarchyPointNode<PersonNode>) => void,
 ) {
-    const node = container
-        .append("g")
-        .selectAll("g")
-        .data(data)
+    const nodes = container
+        .selectAll<SVGGElement, d3.HierarchyPointNode<PersonNode>>(".node")
+        .data(data, (d) => {
+            console.log(d.data);
+            return d.data.Id;
+        });
+
+    nodes.exit().transition().duration(500).style("opacity", 0).remove();
+
+    const node = nodes
         .enter()
         .append("g")
-        .attr("class", `node ${className}`)
+        .attr("class", (d) => `node node-${d.data.type}`)
+        .attr("transform", (d) => `translate(${d.x},${d.y})`)
+        .attr("opacity", 0);
+
+    node.merge(nodes)
+        .transition()
+        .duration(500)
+        .style("opacity", 1)
+        .attr("class", (d) => `node node-${d.data.type}`)
         .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
     node.append("rect")
@@ -96,7 +127,7 @@ function createNodes(
                     return "#A0A0A0";
             }
         })
-        .attr("stroke-width", 4)
+        .attr("stroke-width", 8)
         .on("click", onNodeClick);
 
     node.append("text")

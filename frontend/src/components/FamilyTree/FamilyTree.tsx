@@ -1,13 +1,13 @@
 import "./FamilyTree.css";
 
 import * as d3 from "d3-hierarchy";
-import { select } from "d3-selection";
+import { select, type Selection } from "d3-selection";
 import { zoom, zoomIdentity } from "d3-zoom";
 import { useCallback, useEffect, useRef } from "react";
 
 import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider";
 import { buildHourglassTree, type PersonNode } from "@/components/FamilyTree/FamilyTree.service";
-import { fillGraph } from "@/components/FamilyTree/FamilyTree.svg";
+import { updateGraph } from "@/components/FamilyTree/FamilyTree.svg";
 import { useLoading } from "@/components/Loading";
 import type { FamilyTreeDto } from "@/types/dto";
 
@@ -20,7 +20,9 @@ export const LAYOUT_HEIGHT = 200;
 
 const FamilyTree = ({ familyTree }: FamilyTreeProps) => {
     const ref = useRef<SVGSVGElement>(null);
-    const curZoom = useRef<{ x: number; y: number; k: number }>(undefined);
+    // const containerRef = useRef<SVGGElement>(null);
+    const containerRef = useRef<Selection<SVGGElement, any, any, any>>(undefined);
+    const zoomRef = useRef<{ x: number; y: number; k: number }>(undefined);
 
     const { getFamilyTree } = useApiFamilyTree();
     const { showLoading, hideLoading } = useLoading();
@@ -51,40 +53,37 @@ const FamilyTree = ({ familyTree }: FamilyTreeProps) => {
         const ancestorNodes = treeLayout(ancestorRoot);
         ancestorNodes.descendants().forEach((node) => (node.y = -node.y));
 
-        if (curZoom.current == null) {
+        if (zoomRef.current == null) {
             const { width, height } = svgElement.getBoundingClientRect();
-            curZoom.current = { x: width / 2, y: height / 2, k: 1 };
+            zoomRef.current = { x: width / 2, y: height / 2, k: 1 };
         }
         const initialTransform = zoomIdentity
-            .translate(curZoom.current.x, curZoom.current.y)
-            .scale(curZoom.current.k);
+            .translate(zoomRef.current.x, zoomRef.current.y)
+            .scale(zoomRef.current.k);
 
         // Prepare zoom
         const zoomBehavior = zoom<SVGSVGElement, unknown>()
             .scaleExtent([0.1, 4])
             .on("zoom", (zoomEvent) => {
-                curZoom.current = zoomEvent.transform;
+                zoomRef.current = zoomEvent.transform;
                 svg.select("g").attr("transform", zoomEvent.transform);
             });
 
-        // TODO do some transition instead of deleting everything
-        // Clear previous graph
-        svg.selectAll("*").remove();
+        if (!containerRef.current) {
+            containerRef.current = svg.append("g").attr("class", "family-tree");
+            // Apply zoom
+            svg.call(zoomBehavior)
+                .on("dblclick.zoom", null)
+                .call(zoomBehavior.transform, initialTransform);
+        }
 
-        // Create root graph element
-        const g = svg.append("g");
-        // Apply zoom
-        svg.call(zoomBehavior)
-            .on("dblclick.zoom", null)
-            .call(zoomBehavior.transform, initialTransform);
-
-        // Fill graph with all new nodes
-        fillGraph(g, descendantNodes, ancestorNodes, (_event, d) => {
-            const scale = curZoom.current!.k;
-            curZoom.current = {
-                x: curZoom.current!.x + d.x * scale,
-                y: curZoom.current!.y + d.y * scale,
-                k: curZoom.current!.k,
+        // Enter new nodes, move updated nodes, delete old nodes
+        updateGraph(containerRef.current, descendantNodes, ancestorNodes, (_event, d) => {
+            const scale = zoomRef.current!.k;
+            zoomRef.current = {
+                x: zoomRef.current!.x + d.x * scale,
+                y: zoomRef.current!.y + d.y * scale,
+                k: zoomRef.current!.k,
             };
             changeRoot(d.data.Id);
         });

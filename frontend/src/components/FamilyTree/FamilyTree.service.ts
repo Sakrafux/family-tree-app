@@ -3,6 +3,7 @@ import type { FamilyTreeDto, PersonDto } from "@/types/dto";
 export type PersonNode = PersonDto & {
     // Necessary naming for d3
     children: PersonDto[];
+    type: "ancestor" | "descendant" | "root";
 };
 
 export function buildDescendantTree(familyTree: FamilyTreeDto, id: string): PersonNode {
@@ -11,7 +12,7 @@ export function buildDescendantTree(familyTree: FamilyTreeDto, id: string): Pers
         (child) => child != null,
     );
 
-    const node = { ...rootPerson, children: children };
+    const node: PersonNode = { ...rootPerson, children: children, type: "descendant" };
     if (children.length) {
         node.children = children.map((child) => buildDescendantTree(familyTree, child.Id));
     }
@@ -25,7 +26,7 @@ export function buildAncestorTree(familyTree: FamilyTreeDto, id: string): Person
         (parent) => parent != null,
     );
 
-    const node = { ...rootPerson, children: parents };
+    const node: PersonNode = { ...rootPerson, children: parents, type: "ancestor" };
     if (parents.length) {
         node.children = parents.map((parent) => buildAncestorTree(familyTree, parent.Id));
     }
@@ -40,6 +41,9 @@ export function buildHourglassTree(
 
     const descendantTree = buildDescendantTree(familyTree, id);
     const ancestorTree = buildAncestorTree(familyTree, id);
+
+    descendantTree.type = "root";
+    ancestorTree.type = "root";
 
     return [descendantTree, ancestorTree];
 }
