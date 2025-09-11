@@ -6,17 +6,25 @@ import { zoom, zoomIdentity } from "d3-zoom";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider";
-import { buildHourglassTree, type PersonNode } from "@/components/FamilyTree/FamilyTree.service";
+import {
+    buildHourglassTree,
+    type MinHierarchyNode,
+    type PersonNode,
+    createSiblingNodes,
+    createSiblingLinks,
+    createSpouseNodes,
+    createSpouseLinks
+} from "@/components/FamilyTree/FamilyTree.service";
 import { type OnNodeClickFn, updateGraph } from "@/components/FamilyTree/FamilyTree.svg";
 import { useLoading } from "@/components/Loading";
 import type { FamilyTreeDto } from "@/types/dto";
 
+export const LAYOUT_WIDTH = 350;
+export const LAYOUT_HEIGHT = 200;
+
 type FamilyTreeProps = {
     initialId: string;
 };
-
-export const LAYOUT_WIDTH = 350;
-export const LAYOUT_HEIGHT = 200;
 
 const FamilyTree = ({ initialId }: FamilyTreeProps) => {
     const [curId, setCurId] = useState(initialId);
@@ -30,7 +38,7 @@ const FamilyTree = ({ initialId }: FamilyTreeProps) => {
     const { showLoading, hideLoading } = useLoading();
 
     const onNodeClick = useCallback(
-        async (_event: any, d: d3.HierarchyPointNode<PersonNode>) => {
+        async (_event: any, d: MinHierarchyNode<PersonNode>) => {
             const id = d.data.Id;
             showLoading();
             await getFamilyTree(id);
@@ -85,8 +93,30 @@ const FamilyTree = ({ initialId }: FamilyTreeProps) => {
                 .call(zoomBehavior.transform, initialTransform);
         }
 
+        const rootNode = descendantNodes;
+
+        const siblingNodes = createSiblingNodes(familyTree);
+        const siblingLinks = createSiblingLinks(rootNode, siblingNodes);
+
+        const spouseNodes = createSpouseNodes(familyTree);
+        const spouseLinks = createSpouseLinks(rootNode, spouseNodes);
+
+        const nodes = [
+            rootNode,
+            ...descendantNodes.descendants().slice(1),
+            ...ancestorNodes.descendants().slice(1),
+            ...siblingNodes,
+            ...spouseNodes,
+        ];
+        const links = [
+            ...descendantNodes.links(),
+            ...ancestorNodes.links(),
+            ...siblingLinks,
+            ...spouseLinks,
+        ];
+
         // Enter new nodes, move updated nodes, delete old nodes
-        updateGraph(containerRef.current, descendantNodes, ancestorNodes, onNodeClickRef);
+        updateGraph(containerRef.current, nodes, links, onNodeClickRef);
     }, [familyTree, onNodeClick]); // Re-run if data change
 
     return (

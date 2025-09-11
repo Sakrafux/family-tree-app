@@ -1,8 +1,11 @@
 package service
 
 import (
+	"cmp"
 	"math"
 	"sync"
+
+	"github.com/google/uuid"
 )
 
 func initAsync(n int) (*sync.WaitGroup, chan error) {
@@ -33,4 +36,28 @@ func derefDateInt32(p *int32) int32 {
 		return math.MaxInt32
 	}
 	return *p
+}
+
+func compareByBirthDate(dto *FamilyTreeDto, a, b uuid.UUID) int {
+	personA, ok := dto.Persons[a]
+	if !ok {
+		return 0
+	}
+	personB, ok := dto.Persons[b]
+	if !ok {
+		return 0
+	}
+
+	ay, by := derefDateInt32(personA.BirthDateYear), derefDateInt32(personB.BirthDateYear)
+	if ay != by {
+		return cmp.Compare(ay, by)
+	}
+
+	am, bm := derefDateInt32(personA.BirthDateMonth), derefDateInt32(personB.BirthDateMonth)
+	if am != bm {
+		return cmp.Compare(am, bm)
+	}
+
+	ad, bd := derefDateInt32(personA.BirthDateDay), derefDateInt32(personB.BirthDateDay)
+	return cmp.Compare(ad, bd)
 }

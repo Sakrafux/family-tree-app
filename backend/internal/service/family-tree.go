@@ -125,6 +125,24 @@ func relateSpouses(dto *FamilyTreeDto, chMarriageRelations chan []*db.MarriageRe
 			p2.Spouses = append(p2.Spouses, spouse2)
 		}
 	}
+
+	// Sort spouses deterministically
+	for _, person := range dto.Persons {
+		slices.SortFunc(person.Spouses, func(a, b SpouseDto) int {
+			ay, by := derefDateInt32(a.SinceYear), derefDateInt32(b.SinceYear)
+			if ay != by {
+				return cmp.Compare(by, ay)
+			}
+
+			am, bm := derefDateInt32(a.SinceMonth), derefDateInt32(b.SinceMonth)
+			if am != bm {
+				return cmp.Compare(bm, am)
+			}
+
+			ad, bd := derefDateInt32(a.SinceDay), derefDateInt32(b.SinceDay)
+			return cmp.Compare(bd, ad)
+		})
+	}
 }
 
 func relateParentsAndChildren(dto *FamilyTreeDto, chParentRelations chan []*db.ParentRelation) {
@@ -145,27 +163,7 @@ func relateParentsAndChildren(dto *FamilyTreeDto, chParentRelations chan []*db.P
 			}
 		}
 		slices.SortFunc(person.Children, func(a, b uuid.UUID) int {
-			personA, ok := dto.Persons[a]
-			if !ok {
-				return 0
-			}
-			personB, ok := dto.Persons[b]
-			if !ok {
-				return 0
-			}
-
-			ay, by := derefDateInt32(personA.BirthDateYear), derefDateInt32(personB.BirthDateYear)
-			if ay != by {
-				return cmp.Compare(ay, by)
-			}
-
-			am, bm := derefDateInt32(personA.BirthDateMonth), derefDateInt32(personB.BirthDateMonth)
-			if am != bm {
-				return cmp.Compare(am, bm)
-			}
-
-			ad, bd := derefDateInt32(personA.BirthDateDay), derefDateInt32(personB.BirthDateDay)
-			return cmp.Compare(ad, bd)
+			return compareByBirthDate(dto, a, b)
 		})
 	}
 }
@@ -182,6 +180,13 @@ func relateSiblings(dto *FamilyTreeDto, chSiblingRelations chan []*db.SiblingRel
 		if s2, ok := dto.Persons[siblingRelation.Person2Id]; ok {
 			s2.Siblings = append(s2.Siblings, sibling2)
 		}
+	}
+
+	// Sort siblings deterministically
+	for _, person := range dto.Persons {
+		slices.SortFunc(person.Siblings, func(a, b SiblingDto) int {
+			return compareByBirthDate(dto, a.Id, b.Id)
+		})
 	}
 }
 
