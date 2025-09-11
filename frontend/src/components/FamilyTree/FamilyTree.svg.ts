@@ -16,21 +16,18 @@ export function fillGraph(
     createNodes(
         container,
         descendantNodes.descendants().slice(0, 1),
-        false,
         "node-root",
         () => {},
     );
     createNodes(
         container,
         descendantNodes.descendants().slice(1),
-        false,
         "node-descendant",
         onNodeClick,
     );
     createNodes(
         container,
         ancestorNodes.descendants().slice(1),
-        true,
         "node-ancestor",
         onNodeClick,
     );
@@ -46,10 +43,10 @@ function createLines(
 
     const calculatePoints = (d: d3.HierarchyPointLink<PersonNode>): string => {
         const sx = d.source.x;
-        const sy = d.source.y * directionMult;
+        const sy = d.source.y;
         const tx = d.target.x;
-        const ty = d.target.y * directionMult;
-        const tyHalf = (d.target.y - LAYOUT_HEIGHT / 2) * directionMult;
+        const ty = d.target.y;
+        const tyHalf = d.target.y - (LAYOUT_HEIGHT / 2) * directionMult;
         return `${sx},${sy} ${sx},${tyHalf} ${tx},${tyHalf} ${tx},${ty}`;
     };
 
@@ -74,7 +71,6 @@ const NODE_HEIGHT_HALF = NODE_HEIGHT / 2;
 function createNodes(
     container: Selection<SVGGElement, any, any, any>,
     data: d3.HierarchyPointNode<PersonNode>[],
-    inverted: boolean,
     className: string,
     onNodeClick: (event: any, d: d3.HierarchyPointNode<PersonNode>) => void,
 ) {
@@ -85,7 +81,7 @@ function createNodes(
         .enter()
         .append("g")
         .attr("class", `node ${className}`)
-        .attr("transform", (d) => `translate(${d.x},${inverted ? -d.y : d.y})`);
+        .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
     node.append("rect")
         .attr("x", -NODE_WIDTH_HALF)
