@@ -5,12 +5,12 @@ import {
     useCallback,
     useContext,
     useRef,
-    useState,
+    useState
 } from "react";
 
 type LoadingContextType = {
     isLoading: boolean;
-    showLoading: () => void;
+    showLoading: (ignoreDelay?: boolean) => void;
     hideLoading: () => void;
 };
 
@@ -20,11 +20,9 @@ export const LoadingProvider = ({ children }: PropsWithChildren) => {
     const [isLoading, setIsLoading] = useState(false);
     const delayTimer = useRef<NodeJS.Timeout | null>(null);
 
-    const showLoading = useCallback(() => {
+    const showLoading = useCallback((ignoreDelay?: boolean) => {
         if (!delayTimer.current) {
-            delayTimer.current = setTimeout(() => {
-                setIsLoading(true);
-            }, 100);
+            delayTimer.current = setTimeout(() => setIsLoading(true), ignoreDelay ? 0 : 100);
         }
     }, []);
 
