@@ -10,7 +10,7 @@ function Header() {
         <header className="header-height sticky top-0 bg-white px-6 py-4 shadow-md">
             <div className="text-container flex items-center justify-between">
                 <div className="flex-shrink-0 cursor-default">
-                    <h1 className="text-xl font-bold text-gray-900">Family Tree</h1>
+                    <h1 className="text-xl font-bold text-gray-900">Stammbaum Hell</h1>
                 </div>
 
                 <nav className="hidden items-center space-x-8 md:flex">

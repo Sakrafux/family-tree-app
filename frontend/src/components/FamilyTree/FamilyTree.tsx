@@ -8,12 +8,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider";
 import {
     buildHourglassTree,
+    createSiblingLinks,
+    createSiblingNodes,
+    createSpouseLinks,
+    createSpouseNodes,
     type MinHierarchyNode,
     type PersonNode,
-    createSiblingNodes,
-    createSiblingLinks,
-    createSpouseNodes,
-    createSpouseLinks
 } from "@/components/FamilyTree/FamilyTree.service";
 import { type OnNodeClickFn, updateGraph } from "@/components/FamilyTree/FamilyTree.svg";
 import { useLoading } from "@/components/Loading";

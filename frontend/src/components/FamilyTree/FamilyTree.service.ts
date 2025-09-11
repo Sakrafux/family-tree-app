@@ -110,3 +110,7 @@ export function createSpouseLinks(
 ): MinHierarchyLink<PersonNode>[] {
     return spouseNodes.map((spouseNode) => ({ source: rootNode, target: spouseNode }));
 }
+
+// TODO ancestor (descendant?) spousal links
+// TODO uncles/aunts as fake ancestors (+ links)
+// TODO child spouses as fake descendants (+ links)
