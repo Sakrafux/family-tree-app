@@ -5,7 +5,7 @@ import {
     useCallback,
     useContext,
     useRef,
-    useState
+    useState,
 } from "react";
 
 type LoadingContextType = {
