@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef } from "react";
 import * as d3 from "d3-hierarchy";
 import { select } from "d3-selection";
 import { zoom, zoomIdentity } from "d3-zoom";
-import { buildHourglassTree, type PersonNode } from "@/components/FamilyTree/FamilyTree.service.ts";
+import {
+    buildHourglassTree,
+    type PersonNode,
+} from "@/components/FamilyTree/FamilyTree.service.ts";
 import type { FamilyTreeDto } from "@/types/dto.ts";
 import { fillGraph } from "@/components/FamilyTree/FamilyTree.svg.ts";
 import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider.tsx";
