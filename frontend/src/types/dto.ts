@@ -27,6 +27,7 @@ export type PersonDto = {
     DeathDateYear?: number;
     DeathDateMonth?: number;
     DeathDateDay?: number;
+    Age?: number;
     Level: number;
     Distance: number;
     Parents: string[];

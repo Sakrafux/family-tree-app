@@ -266,7 +266,7 @@ function createNodes(
         .attr("y", 20 - NODE_HEIGHT_HALF)
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "middle")
-        .text((d) => `${d.data?.FirstName ?? ""} ${d.data?.LastName ?? ""}`)
+        .text(generateFullName)
         .clone()
         .attr("dy", 18)
         .text((d) =>
@@ -366,6 +366,13 @@ function createNodes(
                 .attr("font-color", "#616161")
                 .text((d) => d.data.Siblings.length);
         });
+}
+
+function generateFullName(node: MinHierarchyNode<PersonNode>) {
+    const age = node.data.Age != null ? ` (${node.data.Age})` : "";
+    const firstName = node.data.FirstName ? `${node.data.FirstName} ` : "";
+    const lastName = node.data.LastName ?? "";
+    return `${firstName}${lastName}${age}`;
 }
 
 function getClassIsDead(node: MinHierarchyNode<PersonNode>) {

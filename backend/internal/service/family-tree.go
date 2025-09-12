@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"slices"
+	"time"
 
 	"github.com/Sakrafux/family-tree/backend/internal/db"
 	"github.com/Sakrafux/family-tree/backend/internal/errors"
@@ -91,7 +92,7 @@ func mapPersonsByDistance(dto *FamilyTreeDto, chPersons chan []*db.Person, chDis
 			break
 		}
 
-		dto.Persons[distance.Id] = &PersonDto{
+		person := &PersonDto{
 			Person:   personMap[distance.Id],
 			Distance: distance.Distance,
 			Parents:  make([]uuid.UUID, 0),
@@ -99,9 +100,53 @@ func mapPersonsByDistance(dto *FamilyTreeDto, chPersons chan []*db.Person, chDis
 			Siblings: make([]SiblingDto, 0),
 			Spouses:  make([]SpouseDto, 0),
 		}
+		person.Age = calculateAge(person)
+
+		dto.Persons[distance.Id] = person
 	}
 
 	return nil
+}
+
+func calculateAge(person *PersonDto) *int32 {
+	currentDay := int32(time.Now().Day())
+	currentMonth := int32(time.Now().Month())
+	currentYear := int32(time.Now().Year())
+	toDay := &currentDay
+	toMonth := &currentMonth
+	toYear := &currentYear
+
+	if person.IsDead != nil && *person.IsDead {
+		toDay = person.DeathDateDay
+		toMonth = person.DeathDateMonth
+		toYear = person.DeathDateYear
+	}
+
+	fromDay := person.BirthDateDay
+	fromMonth := person.BirthDateMonth
+	fromYear := person.BirthDateYear
+
+	var age int32
+	initAge := true
+	if fromYear != nil && toYear != nil {
+		age = *toYear - *fromYear
+		initAge = false
+	}
+	if fromMonth != nil && toMonth != nil {
+		if *fromMonth > *toMonth {
+			age--
+			initAge = false
+		} else if *fromMonth == *toMonth && fromDay != nil && toDay != nil && *fromDay > *toDay {
+			age--
+			initAge = false
+		}
+	}
+
+	if initAge {
+		return nil
+	}
+
+	return &age
 }
 
 func relateSpouses(dto *FamilyTreeDto, chMarriageRelations chan []*db.MarriageRelation) {
