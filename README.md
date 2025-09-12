@@ -21,24 +21,22 @@
   - insert new nodes
   - delete nodes?
   - photos
+  - additional fields
+    - job
+    - location/city
+    - photos
+    - etc.
 - user authentication
 - search in default view
+- geographic map view
 
 - use single code style (function vs arrow function, ...)
+- cleanup code
+  - svg styling in css?
 
 - MVP for online
   - authentication
     - dummy result if not
   - bug-fixing
 
-- additional fields
-  - job
-  - location
-  - photos
-  - etc.
-
-- toast repsonse to feedback
-
 - enable db migration
-
-- resolve feedback in ui

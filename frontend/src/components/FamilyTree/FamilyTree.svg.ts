@@ -349,6 +349,17 @@ function createNodes(
                 );
 
             siblingGroup
+                .append("rect")
+                .attr("x", -60)
+                .attr("y", -NODE_HEIGHT_HALF)
+                .attr("width", 120)
+                .attr("height", NODE_HEIGHT)
+                .attr("rx", 20)
+                .attr("ry", 20)
+                .attr("fill", "rgba(0, 0, 0, 0)")
+                .on("click", (event, d) => onNodeClick.current(event, d));
+
+            siblingGroup
                 .append("path")
                 .attr("d", "M60 16 28 48 60 80")
                 .attr("stroke-linecap", "round")
