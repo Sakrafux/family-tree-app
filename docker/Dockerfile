@@ -32,7 +32,7 @@ ENV LD_LIBRARY_PATH=/usr/local/lib
 COPY ../data ./data
 
 # Default command: run webserver
-ENTRYPOINT ["./db-setup", "--db-path", "./db/family-tree.kuzu", "--data-path-prefix", "./data"]
+ENTRYPOINT ["./db-setup", "--db-kuzu-path", "./db/family-tree.kuzu", "--db-sqlite-path", "./db/family-tree.sqlite", "--data-path-prefix", "./data"]
 
 # Stage 2.2: webserver runtime
 FROM debian:bookworm-slim as webserver
@@ -51,4 +51,4 @@ COPY ../frontend/dist ./frontend
 EXPOSE 8080
 
 # Default command: run webserver
-ENTRYPOINT ["./webserver", "--db-path", "./db/family-tree.kuzu"]
+ENTRYPOINT ["./webserver", "--db-kuzu-path", "./db/family-tree.kuzu", "--db-sqlite-path", "./db/family-tree.sqlite"]
