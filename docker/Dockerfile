@@ -13,6 +13,7 @@ COPY ../backend/. .
 # Build DB generator
 RUN CGO_ENABLED=1 go build -o db-setup ./cmd/dbsetup
 # Build webserver
+RUN CGO_ENABLED=1 go generate ./...
 RUN CGO_ENABLED=1 go build -o webserver ./cmd/webserver
 
 # Stage 2.1: db-setup runtime
