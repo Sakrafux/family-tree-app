@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider";
 import FamilyTree from "@/components/FamilyTree";
+import FeedbackOverlay from "@/components/FeedbackOverlay";
 import { useLoading } from "@/components/Loading";
 
 // TODO initial node via login?
@@ -23,6 +24,7 @@ function Home() {
     return (
         <main className="full-wo-header-height w-full">
             <FamilyTree initialId={ID_TO_QUERY} />
+            <FeedbackOverlay />
         </main>
     );
 }

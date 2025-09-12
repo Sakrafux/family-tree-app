@@ -11,3 +11,5 @@
   - jump to selection
   - zoom-in/out
 - search view
+
+- use single code style (function vs arrow function, ...)

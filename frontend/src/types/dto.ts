@@ -39,3 +39,9 @@ export type FamilyTreeDto = {
     Root: PersonDto;
     Persons: Record<string, PersonDto>;
 };
+
+export type FeedbackDto = {
+    Id: number;
+    Text: string;
+    Timestamp: string;
+};

@@ -1,0 +1,114 @@
+import {
+    createContext,
+    type PropsWithChildren,
+    useCallback,
+    useContext,
+    useMemo,
+    useReducer,
+} from "react";
+
+import { useApi } from "@/api/ApiProvider";
+import type { FeedbackDto } from "@/types/dto";
+import type { ApiData, ContextAction } from "@/types/types";
+
+enum FeedbackActions {
+    QUERY_START = "QUERY_START",
+    GET_SUCCESS = "GET_SUCCESS",
+    POST_SUCCESS = "POST_SUCCESS",
+    QUERY_ERROR = "QUERY_ERROR",
+}
+
+function feedbackReducer(
+    state: ApiData<FeedbackDto[]>,
+    action: ContextAction<FeedbackDto[], FeedbackActions>,
+): ApiData<FeedbackDto[]> {
+    switch (action.type) {
+        case FeedbackActions.QUERY_START:
+            return { ...state, loading: true };
+        case FeedbackActions.GET_SUCCESS:
+            return {
+                ...state,
+                loading: false,
+                data: action.payload,
+                error: undefined,
+            };
+        case FeedbackActions.POST_SUCCESS:
+            return {
+                ...state,
+                loading: false,
+                data: [...(state.data ?? []), ...action.payload!],
+                error: undefined,
+            };
+        case FeedbackActions.QUERY_ERROR:
+            return {
+                ...state,
+                loading: false,
+                error: action.error,
+            };
+        default:
+            return state;
+    }
+}
+
+type FeedbackContextType = {
+    state: ApiData<FeedbackDto[]>;
+    getAllFeedbacks: () => Promise<void>;
+    postFeedback: (text: string) => Promise<void>;
+};
+
+const FeedbackContext = createContext<FeedbackContextType | undefined>(undefined);
+
+const initialState: ApiData<FeedbackDto[]> = {
+    data: undefined,
+    loading: undefined,
+    error: undefined,
+};
+
+export function FeedbackProvider({ children }: PropsWithChildren) {
+    const [state, dispatch] = useReducer(feedbackReducer, initialState);
+    const api = useApi();
+
+    const getAllFeedbacks = useCallback(async () => {
+        dispatch({ type: FeedbackActions.QUERY_START });
+        try {
+            const data = await api.get("/feedbacks").then((res) => res.data);
+            dispatch({
+                type: FeedbackActions.GET_SUCCESS,
+                payload: data,
+            });
+        } catch (err) {
+            dispatch({ type: FeedbackActions.QUERY_ERROR, error: err });
+        }
+    }, [api]);
+
+    const postFeedback = useCallback(
+        async (text: string) => {
+            dispatch({ type: FeedbackActions.QUERY_START });
+            try {
+                const data = await api.post("/feedbacks", { Text: text }).then((res) => res.data);
+                dispatch({
+                    type: FeedbackActions.POST_SUCCESS,
+                    payload: [data],
+                });
+            } catch (err) {
+                dispatch({ type: FeedbackActions.QUERY_ERROR, error: err });
+            }
+        },
+        [api],
+    );
+
+    const value = useMemo(
+        () => ({ state, getAllFeedbacks, postFeedback }),
+        [getAllFeedbacks, postFeedback, state],
+    );
+
+    return <FeedbackContext.Provider value={value}>{children}</FeedbackContext.Provider>;
+}
+
+export function useApiFeedback() {
+    const context = useContext(FeedbackContext);
+    if (!context) {
+        throw new Error("useApiFeedback must be used within a FeedbackProvider");
+    }
+    return context;
+}

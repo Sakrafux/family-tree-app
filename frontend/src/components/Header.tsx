@@ -17,8 +17,8 @@ function Header() {
                     <Link to="/" className="text-gray-600 hover:text-gray-900">
                         Home
                     </Link>
-                    <Link to="/about" className="text-gray-600 hover:text-gray-900">
-                        About
+                    <Link to="/feedback" className="text-gray-600 hover:text-gray-900">
+                        Feedback
                     </Link>
                 </nav>
 

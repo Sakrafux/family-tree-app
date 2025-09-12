@@ -17,6 +17,7 @@ func CreaterRouter(kuzuConn *kuzu.Connection, sqlDb *sql.DB) *AuthServeMux {
 	apiRouter.HandleFunc("GET /family-tree/{id}", apiHandler.GetFamilyTree)
 	apiRouter.HandleFunc("GET /feedbacks", apiHandler.GetAllFeedbacks)
 	apiRouter.HandleFunc("POST /feedbacks", apiHandler.PostFeedback)
+	apiRouter.HandleFunc("OPTIONS /feedbacks", nullHandler)
 
 	router.Handle("/", apiRouter)
 
@@ -40,4 +41,8 @@ func createPublicRouter() *AuthServeMux {
 	})
 
 	return publicRouter
+}
+
+func nullHandler(writer http.ResponseWriter, request *http.Request) {
+
 }
