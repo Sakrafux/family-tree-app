@@ -11,7 +11,6 @@ export function ApiProvider({ children }: PropsWithChildren) {
 
     api.interceptors.request.use(
         (config) => {
-            console.log("Request to", config.url);
             return config;
         },
         (error) => Promise.reject(error),
@@ -19,7 +18,6 @@ export function ApiProvider({ children }: PropsWithChildren) {
 
     api.interceptors.response.use(
         (response) => {
-            console.log("Response to", response.config.url);
             return response;
         },
         (error) => Promise.reject(error),

@@ -12,30 +12,30 @@ text {
 }
 
 .node.alive rect {
-    filter: drop-shadow(0px 0px 10px rgba(0, 255, 0, 0.7));
+    filter: drop-shadow(0px 0px 10px rgba(0, 150, 0, 1));
 }
 
 .node.alive rect:hover {
     filter: brightness(1.25) drop-shadow(0px 0px 6px rgba(0, 0, 0, 0.4))
-        drop-shadow(0px 0px 10px rgba(0, 255, 0, 0.7));
+        drop-shadow(0px 0px 10px rgba(0, 150, 0, 1));
 }
 
 .node.dead rect {
-    filter: drop-shadow(0px 0px 10px rgba(255, 0, 0, 0.7));
+    filter: drop-shadow(0px 0px 10px rgba(105, 0, 130, 1));
 }
 
 .node.dead rect:hover {
     filter: brightness(1.25) drop-shadow(0px 0px 6px rgba(0, 0, 0, 0.4))
-        drop-shadow(0px 0px 10px rgba(255, 0, 0, 0.7));
+        drop-shadow(0px 0px 10px rgba(105, 0, 130, 1));
 }
 
 .node.alive-dead-unknown rect {
-    filter: drop-shadow(0px 0px 10px rgba(0, 0, 255, 0.7));
+    filter: drop-shadow(0px 0px 10px rgba(255, 150, 0, 1));
 }
 
 .node.alive-dead-unknown rect:hover {
     filter: brightness(1.25) drop-shadow(0px 0px 6px rgba(0, 0, 0, 0.4))
-        drop-shadow(0px 0px 10px rgba(0, 0, 255, 0.7));
+        drop-shadow(0px 0px 10px rgba(255, 150, 0, 1));
 }
 
 .node.root {
@@ -46,6 +46,7 @@ text {
 .node.root rect {
     stroke: #616161;
     stroke-width: 8px;
+    cursor: default;
 }
 
 text.date {
@@ -55,4 +56,12 @@ text.date {
 
 g.sibling-indicator text {
     fill: #616161;
+}
+
+g.sibling-indicator.right-indicator path {
+    transform: translate(60px, -50px) scale(-1, 1);
+}
+
+g.sibling-indicator.left-indicator path {
+    transform: translate(-60px, -50px) scale(1, 1);
 }

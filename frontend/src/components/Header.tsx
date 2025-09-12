@@ -1,7 +1,11 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 import AvatarSvg from "@/assets/avatar.svg?react";
 import BellSvg from "@/assets/bell.svg?react";
+
+const linkBaseClasses = "text-gray-600 hover:text-gray-900";
+const linkActiveClasses =
+    "text-gray-900 underline underline-offset-4 underline-gray-900 decoration-2";
 
 function Header() {
     const isLoggedIn = false;
@@ -14,12 +18,22 @@ function Header() {
                 </div>
 
                 <nav className="hidden items-center space-x-8 md:flex">
-                    <Link to="/" className="text-gray-600 hover:text-gray-900">
+                    <NavLink
+                        to="/"
+                        className={({ isActive }) =>
+                            `${linkBaseClasses} ${isActive ? linkActiveClasses : ""}`
+                        }
+                    >
                         Home
-                    </Link>
-                    <Link to="/feedback" className="text-gray-600 hover:text-gray-900">
+                    </NavLink>
+                    <NavLink
+                        to="/feedback"
+                        className={({ isActive }) =>
+                            `${linkBaseClasses} ${isActive ? linkActiveClasses : ""}`
+                        }
+                    >
                         Feedback
-                    </Link>
+                    </NavLink>
                 </nav>
 
                 <div className="flex items-center space-x-4">
@@ -34,7 +48,7 @@ function Header() {
                         </>
                     ) : (
                         <>
-                            <button className="cursor-pointer rounded border border-gray-900 bg-white px-5 py-1 font-medium text-gray-900 transition-colors duration-200 hover:bg-gray-600 hover:text-white">
+                            <button className="cursor-pointer border border-gray-900 bg-white px-5 py-1 font-medium text-gray-900 transition-colors duration-200 hover:bg-gray-600 hover:text-white">
                                 Sign In
                             </button>
                         </>

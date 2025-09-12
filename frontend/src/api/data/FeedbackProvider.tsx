@@ -8,11 +8,12 @@ import {
 } from "react";
 
 import { useApi } from "@/api/ApiProvider";
+import { useToast } from "@/components/Toast/ToastProvider";
 import type { FeedbackDto } from "@/types/dto";
 import type { ApiData, ContextAction } from "@/types/types";
 
 enum FeedbackActions {
-    QUERY_START = "QUERY_START",
+    GET_START = "GET_START",
     GET_SUCCESS = "GET_SUCCESS",
     POST_SUCCESS = "POST_SUCCESS",
     QUERY_ERROR = "QUERY_ERROR",
@@ -23,7 +24,7 @@ function feedbackReducer(
     action: ContextAction<FeedbackDto[], FeedbackActions>,
 ): ApiData<FeedbackDto[]> {
     switch (action.type) {
-        case FeedbackActions.QUERY_START:
+        case FeedbackActions.GET_START:
             return { ...state, loading: true };
         case FeedbackActions.GET_SUCCESS:
             return {
@@ -33,10 +34,13 @@ function feedbackReducer(
                 error: undefined,
             };
         case FeedbackActions.POST_SUCCESS:
+            if (state.data == null) {
+                return state;
+            }
             return {
                 ...state,
                 loading: false,
-                data: [...(state.data ?? []), ...action.payload!],
+                data: [...state.data, ...action.payload!],
                 error: undefined,
             };
         case FeedbackActions.QUERY_ERROR:
@@ -67,9 +71,10 @@ const initialState: ApiData<FeedbackDto[]> = {
 export function FeedbackProvider({ children }: PropsWithChildren) {
     const [state, dispatch] = useReducer(feedbackReducer, initialState);
     const api = useApi();
+    const { showToast } = useToast();
 
     const getAllFeedbacks = useCallback(async () => {
-        dispatch({ type: FeedbackActions.QUERY_START });
+        dispatch({ type: FeedbackActions.GET_START });
         try {
             const data = await api.get("/feedbacks").then((res) => res.data);
             dispatch({
@@ -78,23 +83,25 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
             });
         } catch (err) {
             dispatch({ type: FeedbackActions.QUERY_ERROR, error: err });
+            showToast("error", "Feedback-Daten konnten nicht abgefragt werden");
         }
-    }, [api]);
+    }, [api, showToast]);
 
     const postFeedback = useCallback(
         async (text: string) => {
-            dispatch({ type: FeedbackActions.QUERY_START });
             try {
                 const data = await api.post("/feedbacks", { Text: text }).then((res) => res.data);
                 dispatch({
                     type: FeedbackActions.POST_SUCCESS,
                     payload: [data],
                 });
+                showToast("success", "Feedback wurde erfolgreich gesendet", 5000);
             } catch (err) {
                 dispatch({ type: FeedbackActions.QUERY_ERROR, error: err });
+                showToast("error", "Feedback konnte nicht gesendet werden");
             }
         },
-        [api],
+        [api, showToast],
     );
 
     const value = useMemo(

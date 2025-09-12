@@ -238,8 +238,8 @@ function createNodes(
         .attr("y", -NODE_HEIGHT_HALF)
         .attr("width", NODE_WIDTH)
         .attr("height", NODE_HEIGHT)
-        .attr("rx", 10)
-        .attr("ry", 10)
+        .attr("rx", 20)
+        .attr("ry", 20)
         .attr("fill", (d) => {
             switch (d.data.Gender) {
                 case "m":
@@ -251,6 +251,15 @@ function createNodes(
             }
         })
         .on("click", (event, d) => onNodeClick.current(event, d));
+
+    node.append("text")
+        .attr("x", 20 - NODE_WIDTH_HALF)
+        .attr("y", 25 - NODE_HEIGHT_HALF)
+        .attr("text-anchor", "start")
+        .attr("dominant-baseline", "middle")
+        .attr("font-size", "24")
+        .attr("font-weight", "bold")
+        .text((d) => (d.data.IsDead === true ? "†" : d.data.IsDead == null ? "?" : ""));
 
     node.append("text")
         .attr("x", 0)
@@ -319,27 +328,29 @@ function createNodes(
                 .merge(siblingGroups)
                 .transition()
                 .duration(TRANSITION_DURATION)
-                .attr("class", "sibling-indicator")
+                .attr(
+                    "class",
+                    (d) =>
+                        `sibling-indicator ${d.data.Gender === "f" || ["root-spouse", "descendant-spouse"].includes(d.data.type) ? "right-indicator" : "left-indicator"}`,
+                )
                 .attr("transform", (d) => {
                     let x = -30 - NODE_WIDTH_HALF;
-                    if (d.data.Gender === "f" || d.data.type === "descendant-spouse") {
+                    if (
+                        d.data.Gender === "f" ||
+                        ["root-spouse", "descendant-spouse"].includes(d.data.type)
+                    ) {
                         x = 30 + NODE_WIDTH_HALF;
                     }
                     const y = 0;
                     return `translate(${x},${y})`;
                 })
                 .attr("opacity", (d) =>
-                    d.data.type === "ancestor" || d.data.type === "descendant-spouse" ? 1 : 0,
+                    ["ancestor", "root-spouse", "descendant-spouse"].includes(d.data.type) ? 1 : 0,
                 );
 
             siblingGroup
                 .append("path")
                 .attr("d", "M60 16 28 48 60 80")
-                .attr(
-                    "transform",
-                    (d) =>
-                        `translate(${d.data.Gender === "m" ? -60 : 60},-50) scale(${d.data.Gender === "m" ? 1 : -1},1)`,
-                )
                 .attr("stroke-linecap", "round")
                 .attr("stroke-linejoin", "round")
                 .attr("fill", "none")

@@ -18,7 +18,7 @@ import {
     type PersonNode,
 } from "@/components/FamilyTree/FamilyTree.service";
 import { type OnNodeClickFn, updateGraph } from "@/components/FamilyTree/FamilyTree.svg";
-import { useLoading } from "@/components/Loading";
+import { useLoading } from "@/components/LoadingProvider";
 import type { FamilyTreeDto } from "@/types/dto";
 
 export const LAYOUT_WIDTH = 400;

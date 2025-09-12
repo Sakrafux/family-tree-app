@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { useApiFeedback } from "@/api/data/FeedbackProvider";
-import { useLoading } from "@/components/Loading";
+import { useLoading } from "@/components/LoadingProvider";
 
 function Feedback() {
     const { state, getAllFeedbacks } = useApiFeedback();
@@ -10,9 +10,13 @@ function Feedback() {
     const feedbacks = state.data;
 
     useEffect(() => {
-        showLoading();
-        getAllFeedbacks().then(() => hideLoading());
-    }, [getAllFeedbacks, hideLoading, showLoading]);
+        if (state.data == null) {
+            showLoading();
+            getAllFeedbacks().then(() => hideLoading());
+        }
+    }, [getAllFeedbacks, hideLoading, showLoading, state.data]);
+
+    if (state.loading !== false) return null;
 
     if (!feedbacks || feedbacks.length === 0) {
         return (
@@ -29,7 +33,7 @@ function Feedback() {
                 {feedbacks.map((fb) => (
                     <li
                         key={fb.Id}
-                        className="rounded-lg border border-gray-200 bg-gray-50 p-3 transition hover:bg-gray-100"
+                        className="border border-gray-200 bg-gray-50 p-3 transition hover:bg-gray-100"
                     >
                         <p className="text-gray-700">{fb.Text}</p>
                         <p className="mt-1 text-xs text-gray-400">
