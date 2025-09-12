@@ -17,7 +17,7 @@ func NewFeedbackService(db *sql.DB) *FeedbackService {
 }
 
 func (s *FeedbackService) GetAllFeedbacks() ([]*FeedbackDto, error) {
-	feedbacks, err := db.GetAllFeedbacks(s.db)
+	feedbacks, err := db.SelectAllFeedbacks(s.db)
 	if err != nil {
 		return nil, errors.NewInternalServerError(err.Error())
 	}
@@ -30,7 +30,7 @@ func (s *FeedbackService) GetAllFeedbacks() ([]*FeedbackDto, error) {
 }
 
 func (s *FeedbackService) PostFeedback(text string) (*FeedbackDto, error) {
-	fb, err := db.PostFeedback(s.db, text)
+	fb, err := db.InsertFeedback(s.db, text)
 	if err != nil {
 		return nil, errors.NewInternalServerError(err.Error())
 	}
@@ -38,4 +38,12 @@ func (s *FeedbackService) PostFeedback(text string) (*FeedbackDto, error) {
 	dto := &FeedbackDto{fb}
 
 	return dto, nil
+}
+
+func (s *FeedbackService) ResolveFeedback(id int, isResolved bool) error {
+	err := db.UpdateFeedbackIsResolved(s.db, id, isResolved)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	return nil
 }

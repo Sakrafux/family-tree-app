@@ -6,6 +6,7 @@ export type ApiData<T> = {
 
 export type ContextAction<P, T = string, E = any> = {
     type: T;
+    params?: Record<string, any>;
     payload?: P;
     error?: E;
 };

@@ -16,13 +16,14 @@ enum FeedbackActions {
     GET_START = "GET_START",
     GET_SUCCESS = "GET_SUCCESS",
     POST_SUCCESS = "POST_SUCCESS",
+    PATCH_SUCCESS = "PATCH_SUCCESS",
     QUERY_ERROR = "QUERY_ERROR",
 }
 
 function feedbackReducer(
-    state: ApiData<FeedbackDto[]>,
-    action: ContextAction<FeedbackDto[], FeedbackActions>,
-): ApiData<FeedbackDto[]> {
+    state: ApiData<Record<number, FeedbackDto>>,
+    action: ContextAction<Record<number, FeedbackDto> | FeedbackDto, FeedbackActions>,
+): ApiData<Record<number, FeedbackDto>> {
     switch (action.type) {
         case FeedbackActions.GET_START:
             return { ...state, loading: true };
@@ -30,23 +31,35 @@ function feedbackReducer(
             return {
                 ...state,
                 loading: false,
-                data: action.payload,
+                data: action.payload as Record<number, FeedbackDto>,
                 error: undefined,
             };
-        case FeedbackActions.POST_SUCCESS:
+        case FeedbackActions.POST_SUCCESS: {
             if (state.data == null) {
                 return state;
             }
+            const data = action.payload as FeedbackDto;
             return {
                 ...state,
-                loading: false,
-                data: [...state.data, ...action.payload!],
+                data: { ...state.data, [data.Id]: data },
                 error: undefined,
             };
+        }
+        case FeedbackActions.PATCH_SUCCESS: {
+            if (state.data == null) {
+                return state;
+            }
+            const { id, isResolved } = action.params!;
+            const data = state.data[id];
+            return {
+                ...state,
+                data: { ...state.data, [id]: { ...data, IsResolved: isResolved } },
+                error: undefined,
+            };
+        }
         case FeedbackActions.QUERY_ERROR:
             return {
                 ...state,
-                loading: false,
                 error: action.error,
             };
         default:
@@ -55,14 +68,15 @@ function feedbackReducer(
 }
 
 type FeedbackContextType = {
-    state: ApiData<FeedbackDto[]>;
+    state: ApiData<Record<number, FeedbackDto>>;
     getAllFeedbacks: () => Promise<void>;
     postFeedback: (text: string) => Promise<void>;
+    patchFeedbackResolve: (id: number, isResolved: boolean) => Promise<void>;
 };
 
 const FeedbackContext = createContext<FeedbackContextType | undefined>(undefined);
 
-const initialState: ApiData<FeedbackDto[]> = {
+const initialState: ApiData<Record<number, FeedbackDto>> = {
     data: undefined,
     loading: undefined,
     error: undefined,
@@ -76,10 +90,10 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     const getAllFeedbacks = useCallback(async () => {
         dispatch({ type: FeedbackActions.GET_START });
         try {
-            const data = await api.get("/feedbacks").then((res) => res.data);
+            const data = await api.get<FeedbackDto[]>("/feedbacks").then((res) => res.data);
             dispatch({
                 type: FeedbackActions.GET_SUCCESS,
-                payload: data,
+                payload: Object.fromEntries(data.map((f) => [f.Id, f])),
             });
         } catch (err) {
             dispatch({ type: FeedbackActions.QUERY_ERROR, error: err });
@@ -93,7 +107,7 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
                 const data = await api.post("/feedbacks", { Text: text }).then((res) => res.data);
                 dispatch({
                     type: FeedbackActions.POST_SUCCESS,
-                    payload: [data],
+                    payload: data,
                 });
                 showToast("success", "Feedback wurde erfolgreich gesendet", 5000);
             } catch (err) {
@@ -104,9 +118,27 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
         [api, showToast],
     );
 
+    const patchFeedbackResolve = useCallback(
+        async (id: number, isResolved: boolean) => {
+            try {
+                await api
+                    .patch(`/feedbacks/${id}`, { IsResolved: isResolved })
+                    .then((res) => res.data);
+                dispatch({
+                    type: FeedbackActions.PATCH_SUCCESS,
+                    params: { id, isResolved },
+                });
+            } catch (err) {
+                dispatch({ type: FeedbackActions.QUERY_ERROR, error: err });
+                showToast("error", "Feedback konnte nicht geupdated werden");
+            }
+        },
+        [api, showToast],
+    );
+
     const value = useMemo(
-        () => ({ state, getAllFeedbacks, postFeedback }),
-        [getAllFeedbacks, postFeedback, state],
+        () => ({ state, getAllFeedbacks, postFeedback, patchFeedbackResolve }),
+        [getAllFeedbacks, patchFeedbackResolve, postFeedback, state],
     );
 
     return <FeedbackContext.Provider value={value}>{children}</FeedbackContext.Provider>;

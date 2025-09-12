@@ -132,7 +132,8 @@ func initSqlite(dbPath string) {
 		CREATE TABLE IF NOT EXISTS feedback (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			text TEXT NOT NULL,
-			creation_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+			creation_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+			is_resolved INTEGER DEFAULT 0
 		);
 	`); err != nil {
 		log.Fatal(err)

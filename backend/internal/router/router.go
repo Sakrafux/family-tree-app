@@ -18,6 +18,8 @@ func CreaterRouter(kuzuConn *kuzu.Connection, sqlDb *sql.DB) *AuthServeMux {
 	apiRouter.HandleFunc("GET /feedbacks", apiHandler.GetAllFeedbacks)
 	apiRouter.HandleFunc("POST /feedbacks", apiHandler.PostFeedback)
 	apiRouter.HandleFunc("OPTIONS /feedbacks", nullHandler)
+	apiRouter.HandleFunc("PATCH /feedbacks/{id}", apiHandler.PatchFeedbackResolve)
+	apiRouter.HandleFunc("OPTIONS /feedbacks/{id}", nullHandler)
 
 	router.Handle("/", apiRouter)
 
@@ -43,6 +45,6 @@ func createPublicRouter() *AuthServeMux {
 	return publicRouter
 }
 
-func nullHandler(writer http.ResponseWriter, request *http.Request) {
-
+func nullHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNoContent)
 }

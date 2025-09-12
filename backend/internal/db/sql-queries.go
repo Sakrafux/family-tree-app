@@ -2,8 +2,8 @@ package db
 
 import "database/sql"
 
-func GetAllFeedbacks(db *sql.DB) ([]*Feedback, error) {
-	rows, err := db.Query("SELECT id, text, creation_timestamp FROM feedback")
+func SelectAllFeedbacks(db *sql.DB) ([]*Feedback, error) {
+	rows, err := db.Query("SELECT id, text, creation_timestamp, is_resolved FROM feedback")
 	if err != nil {
 		return nil, err
 	}
@@ -12,8 +12,12 @@ func GetAllFeedbacks(db *sql.DB) ([]*Feedback, error) {
 	feedbacks := make([]*Feedback, 0)
 	for rows.Next() {
 		fb := &Feedback{}
-		if err := rows.Scan(&fb.Id, &fb.Text, &fb.Timestamp); err != nil {
+		var isResolvedInt int
+		if err := rows.Scan(&fb.Id, &fb.Text, &fb.Timestamp, &isResolvedInt); err != nil {
 			return nil, err
+		}
+		if isResolvedInt != 0 {
+			fb.IsResolved = true
 		}
 		feedbacks = append(feedbacks, fb)
 	}
@@ -21,7 +25,7 @@ func GetAllFeedbacks(db *sql.DB) ([]*Feedback, error) {
 	return feedbacks, nil
 }
 
-func PostFeedback(db *sql.DB, text string) (*Feedback, error) {
+func InsertFeedback(db *sql.DB, text string) (*Feedback, error) {
 	res, err := db.Exec("INSERT INTO feedback (text) VALUES ($1)", text)
 	if err != nil {
 		return nil, err
@@ -42,4 +46,16 @@ func PostFeedback(db *sql.DB, text string) (*Feedback, error) {
 	}
 
 	return fb, nil
+}
+
+func UpdateFeedbackIsResolved(db *sql.DB, id int, isResolved bool) error {
+	isResolvedInt := 0
+	if isResolved {
+		isResolvedInt = 1
+	}
+	_, err := db.Exec("UPDATE feedback SET is_resolved = $1 WHERE id = $2", isResolvedInt, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -45,4 +45,5 @@ export type FeedbackDto = {
     Id: number;
     Text: string;
     Timestamp: string;
+    IsResolved: boolean;
 };

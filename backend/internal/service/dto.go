@@ -36,8 +36,12 @@ type FamilyTreeDto struct {
 	Persons map[uuid.UUID]*PersonDto
 }
 
-type FeedbackRequest struct {
+type PostFeedbackRequest struct {
 	Text string
+}
+
+type PatchFeedbackResolveRequest struct {
+	IsResolved bool
 }
 
 type FeedbackDto struct {

@@ -62,7 +62,7 @@ func (h *Handler) GetAllFeedbacks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) PostFeedback(w http.ResponseWriter, r *http.Request) {
-	var fbr service.FeedbackRequest
+	var fbr service.PostFeedbackRequest
 	err := json.NewDecoder(r.Body).Decode(&fbr)
 	if err != nil {
 		errors.HandleHttpError(w, r, errors.NewUnprocessableEntityError(err.Error()))
@@ -74,5 +74,28 @@ func (h *Handler) PostFeedback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(http.StatusCreated)
 	writeJson(w, data)
+}
+
+func (h *Handler) PatchFeedbackResolve(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		errors.HandleHttpError(w, r, errors.NewBadRequestError(err.Error()))
+		return
+	}
+
+	var fbr service.PatchFeedbackResolveRequest
+	err = json.NewDecoder(r.Body).Decode(&fbr)
+	if err != nil {
+		errors.HandleHttpError(w, r, errors.NewUnprocessableEntityError(err.Error()))
+	}
+
+	err = h.feedbackService.ResolveFeedback(id, fbr.IsResolved)
+	if err != nil {
+		errors.HandleHttpError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
