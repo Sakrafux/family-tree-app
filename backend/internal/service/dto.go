@@ -72,3 +72,11 @@ type FamilyTreeDto struct {
 	Root    *PersonDto
 	Persons map[uuid.UUID]*PersonDto
 }
+
+type FeedbackRequest struct {
+	Text string
+}
+
+type FeedbackDto struct {
+	*db.Feedback
+}

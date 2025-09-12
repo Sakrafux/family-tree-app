@@ -1,6 +1,7 @@
 .idea
 *.exe
 *.kuzu
+*.sqlite
 node_modules
 package-lock.json
 *_gen.go

@@ -1,6 +1,8 @@
 package api
 
 import (
+	"database/sql"
+	"encoding/json"
 	"math"
 	"net/http"
 	"strconv"
@@ -12,14 +14,16 @@ import (
 )
 
 type Handler struct {
-	conn         *kuzu.Connection
-	graphService *service.GraphService
+	conn            *kuzu.Connection
+	graphService    *service.GraphService
+	feedbackService *service.FeedbackService
 }
 
-func NewHandler(conn *kuzu.Connection) *Handler {
+func NewHandler(kuzuConn *kuzu.Connection, sqlDb *sql.DB) *Handler {
 	return &Handler{
-		conn:         conn,
-		graphService: service.NewGraphService(conn),
+		conn:            kuzuConn,
+		graphService:    service.NewGraphService(kuzuConn),
+		feedbackService: service.NewFeedbackService(sqlDb),
 	}
 }
 
@@ -39,6 +43,32 @@ func (h *Handler) GetFamilyTree(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data, err := h.graphService.GetFamilyTree(id, distance)
+	if err != nil {
+		errors.HandleHttpError(w, r, err)
+		return
+	}
+
+	writeJson(w, data)
+}
+
+func (h *Handler) GetAllFeedbacks(w http.ResponseWriter, r *http.Request) {
+	data, err := h.feedbackService.GetAllFeedbacks()
+	if err != nil {
+		errors.HandleHttpError(w, r, err)
+		return
+	}
+
+	writeJson(w, data)
+}
+
+func (h *Handler) PostFeedback(w http.ResponseWriter, r *http.Request) {
+	var fbr service.FeedbackRequest
+	err := json.NewDecoder(r.Body).Decode(&fbr)
+	if err != nil {
+		errors.HandleHttpError(w, r, errors.NewUnprocessableEntityError(err.Error()))
+	}
+
+	data, err := h.feedbackService.PostFeedback(fbr.Text)
 	if err != nil {
 		errors.HandleHttpError(w, r, err)
 		return

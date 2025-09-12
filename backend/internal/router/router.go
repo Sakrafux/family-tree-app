@@ -1,19 +1,22 @@
 package router
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/Sakrafux/family-tree/backend/internal/api"
 	"github.com/kuzudb/go-kuzu"
 )
 
-func CreaterRouter(conn *kuzu.Connection) *AuthServeMux {
+func CreaterRouter(kuzuConn *kuzu.Connection, sqlDb *sql.DB) *AuthServeMux {
 	router := NewAuthServeMux()
 
-	apiHandler := api.NewHandler(conn)
+	apiHandler := api.NewHandler(kuzuConn, sqlDb)
 	apiRouter := NewAuthServeMux()
 
 	apiRouter.HandleFunc("GET /family-tree/{id}", apiHandler.GetFamilyTree)
+	apiRouter.HandleFunc("GET /feedbacks", apiHandler.GetAllFeedbacks)
+	apiRouter.HandleFunc("POST /feedbacks", apiHandler.PostFeedback)
 
 	router.Handle("/", apiRouter)
 

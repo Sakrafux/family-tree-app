@@ -1,4 +1,4 @@
-//go:generate go run ../../pkg/generators/caster_generator.go
+//go:generate go run ../../pkg/generators/caster_generator.go -o graph-caster_gen.go
 
 package db
 

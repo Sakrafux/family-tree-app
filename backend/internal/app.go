@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 
@@ -11,27 +12,29 @@ import (
 )
 
 type AppConfig struct {
-	DB_PATH string
-	PORT    string
+	DB_KUZU_PATH   string
+	DB_SQLITE_PATH string
+	PORT           string
 }
 
 type DbContext struct {
-	db   *kuzu.Database
-	conn *kuzu.Connection
+	kuzuDb   *kuzu.Database
+	kuzuConn *kuzu.Connection
+	sqlDB    *sql.DB
 }
 
 type App struct {
-	dbContext *DbContext
-	config    *AppConfig
-	server    *http.Server
+	db     *DbContext
+	config *AppConfig
+	server *http.Server
 }
 
 func NewApp(config *AppConfig) *App {
-	return &App{config: config, dbContext: &DbContext{db: nil, conn: nil}}
+	return &App{config: config, db: &DbContext{kuzuDb: nil, kuzuConn: nil}}
 }
 
 func (app *App) Start() {
-	app.connectToDatabase(app.config.DB_PATH)
+	app.connectToDatabases(app.config.DB_KUZU_PATH, app.config.DB_SQLITE_PATH)
 	defer app.closeDatabase()
 
 	app.server = &http.Server{
@@ -43,13 +46,15 @@ func (app *App) Start() {
 	panic(app.server.ListenAndServe())
 }
 
-func (app *App) connectToDatabase(path string) {
-	app.dbContext.db, app.dbContext.conn = db.ConnectToDatabase(path)
+func (app *App) connectToDatabases(kuzuPath, sqlitePath string) {
+	app.db.kuzuDb, app.db.kuzuConn = db.ConnectToKuzu(kuzuPath)
+	app.db.sqlDB = db.ConnectToSqlite(sqlitePath)
 }
 
 func (app *App) closeDatabase() {
-	app.dbContext.conn.Close()
-	app.dbContext.db.Close()
+	app.db.kuzuConn.Close()
+	app.db.kuzuDb.Close()
+	app.db.sqlDB.Close()
 }
 
 func (app *App) createRouter() http.Handler {
@@ -59,5 +64,5 @@ func (app *App) createRouter() http.Handler {
 		middleware.LoadUser,
 	)
 
-	return stack(router.CreaterRouter(app.dbContext.conn))
+	return stack(router.CreaterRouter(app.db.kuzuConn, app.db.sqlDB))
 }

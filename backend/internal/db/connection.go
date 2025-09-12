@@ -4,13 +4,16 @@ import (
 	"log"
 	"os"
 
+	"database/sql"
+
 	"github.com/kuzudb/go-kuzu"
+	_ "modernc.org/sqlite"
 )
 
-func ConnectToDatabase(path string) (*kuzu.Database, *kuzu.Connection) {
-	log.Println("Connecting to database...")
+func ConnectToKuzu(path string) (*kuzu.Database, *kuzu.Connection) {
+	log.Println("[kuzu] Connecting to database...")
 	if _, err := os.Stat(path); err != nil {
-		log.Println("Database does not exist")
+		log.Println("[kuzu] Database does not exist")
 		log.Fatal(err)
 	}
 
@@ -25,7 +28,23 @@ func ConnectToDatabase(path string) (*kuzu.Database, *kuzu.Connection) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Successfully connected to database")
+	log.Println("[kuzu] Successfully connected to database")
 
 	return db, conn
+}
+
+func ConnectToSqlite(path string) *sql.DB {
+	log.Println("[sqlite] Connecting to database...")
+	if _, err := os.Stat(path); err != nil {
+		log.Println("[sqlite] Database does not exist")
+		log.Fatal(err)
+	}
+
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("[sqlite] Successfully connected to database")
+
+	return db
 }
