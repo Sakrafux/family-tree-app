@@ -131,6 +131,7 @@ const FamilyTree = ({ initialId }: FamilyTreeProps) => {
         const ancestorSpouseLinks = createAncestorSpouseLink(rootNodeAncestor);
 
         // Combine all nodes and links into a common array each
+        // The order of items defines their rendering priority, i.e. later elements overlay earlier ones
         const nodes = [
             rootNodeDescendant,
             ...descendantNodes.descendants().slice(1),

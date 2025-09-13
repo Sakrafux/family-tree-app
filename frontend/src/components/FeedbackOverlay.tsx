@@ -21,7 +21,7 @@ function FeedbackOverlay() {
     };
 
     return (
-        <div className="fixed bottom-5 left-5 z-50 w-96 border border-gray-200 bg-white p-5 opacity-40 shadow-[0_0_20px_rgba(0,0,0,0.2)] focus-within:opacity-100">
+        <div className="fixed bottom-5 left-5 z-50 hidden w-96 border border-gray-200 bg-white p-5 opacity-40 shadow-[0_0_20px_rgba(0,0,0,0.2)] focus-within:opacity-100 md:block">
             <h2 className="mb-3 cursor-default text-xl font-semibold">Feedback</h2>
             <textarea
                 value={feedback}

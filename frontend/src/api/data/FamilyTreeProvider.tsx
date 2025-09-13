@@ -28,6 +28,7 @@ function familyTreeReducer(
             return {
                 ...state,
                 loading: false,
+                // Append the family tree to the cached data
                 data: { ...(state.data ?? {}), [action.payload!.Root.Id]: action.payload! },
                 error: undefined,
             };
@@ -43,6 +44,7 @@ function familyTreeReducer(
 }
 
 type FamilyTreeContextType = {
+    // Cache all queried family trees in a map by their id
     state: ApiData<Record<string, FamilyTreeDto>>;
     getFamilyTree: (id: string, distance?: number) => Promise<void>;
 };
@@ -61,6 +63,7 @@ export function FamilyTreeProvider({ children }: PropsWithChildren) {
 
     const getFamilyTree = useCallback(
         async (id: string, distance?: number) => {
+            // Don't fetch cached data again
             if (state.data?.[id] != null) {
                 return;
             }

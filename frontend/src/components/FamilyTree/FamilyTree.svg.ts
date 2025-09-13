@@ -24,6 +24,8 @@ export function updateGraph(
     links: MinHierarchyLink<PersonNode>[],
     onNodeClick: RefObject<OnNodeClickFn>,
 ) {
+    // Create containers for links and nodes to ensure nodes are always rendered after links
+    // Thus, the order of creation is important
     let linkContainer = container.select<SVGGElement>(".link-container");
     if (linkContainer.empty()) {
         linkContainer = container.append("g").attr("class", "link-container");
@@ -42,31 +44,57 @@ function createLines(
     data: MinHierarchyLink<PersonNode>[],
 ) {
     const links = container
+        // Select all the groups that contain all the elements necessary for a link...
         .selectAll<SVGGElement, MinHierarchyLink<PersonNode>>(".link")
+        // ...then bind it to the data using an ID function
         .data(data, combineIdsOfLink);
+    // The selection binding results in 3 kinds of results based on whether their ID is bound to a DOM element:
+    // - previously bound, now unbound -> data was removed and must now exit and be removed from DOM
+    // - previously bound, now bound   -> data was updated and must merge new data with existing DOM element
+    // - previously unbound, now bound -> data was added and must enter as new DOM element
 
+    // All now unbound elements must exit and be removed, with optional transition styling
     links.exit().transition().duration(TRANSITION_DURATION).style("opacity", 0).remove();
 
+    // All newly bound elements must be added to the DOM
     const link = links
         .enter()
         .append("g")
         .attr("class", (d) => `link ${d.target.data.type} ${d.data?.type ?? ""}`)
+        // We start them out as invisible
         .attr("opacity", 0);
 
+    // Now update the data of all links, whether already existing or newly created
+    // This also means that newly created links are immediately updated with the same information again,
+    // which isn't an issue
     const linkMerge = link
         .merge(links)
+        // Use a nice fade-in transition by changing the opacity from 0 to 1
         .transition()
         .duration(TRANSITION_DURATION)
-        .style("opacity", 1)
-        .attr("class", (d) => `link ${d.target.data.type} ${d.data?.type ?? ""}`);
+        // The classes are determined by the data and may have changed due to the update
+        .attr("class", (d) => `link ${d.target.data.type} ${d.data?.type ?? ""}`)
+        // Make them fully visible
+        .style("opacity", 1);
 
+    // The issue is that only "links" get updated so far, which means that if the link group already exists
+    // it gets formally updated, but the elements within already existed and aren't changed
+    // Thus, we need to do the same change-aware data binding for each group
     linkMerge.each(function (datum) {
+        // We need to select the current element, which is why the `function` keyword is crucial, as
+        // it allows access to `this` which is bound to the current element
+        // Arrow-functions are not possible for this purpose
         const g = select(this);
 
+        // Same as before, we need to select all the <polyline> elements (though it will only ever be one)
+        // and bind it to a single data element
+        // This needs to be done for each kind of different element we want to create
         const lines = g
             .selectAll<SVGPolylineElement, MinHierarchyLink<PersonNode>>("polyline")
             .data([datum], combineIdsOfLink);
 
+        // This transition is unlikely to fire due to the semantics of our data, which would mean
+        // the whole group should be removed anyway in this case, but is still here as a fallback
         lines.exit().transition().duration(TRANSITION_DURATION).style("opacity", 0).remove();
 
         const line = lines
@@ -88,6 +116,7 @@ function createLines(
             .attr("points", calculatePoints)
             .attr("stroke-dasharray", (d) => (d.data?.type === "spouse" ? "1,3" : ""));
 
+        // Same as for "lines"
         const textGroups = g
             .selectAll<SVGGElement, MinHierarchyLink<PersonNode, SpouseLink>>("g")
             .data<MinHierarchyLink<PersonNode, SpouseLink>>([datum], combineIdsOfLink);
@@ -98,6 +127,8 @@ function createLines(
             .enter()
             .append("g")
             .attr("class", (d) => `link-texts ${d.data?.type ?? ""}`)
+            // Despite this being immediately updated in the merge, we want to set the initial position
+            // or else the groups would transition from the default 0,0 position
             .attr("transform", (d) => {
                 let shiftRight = 0;
                 if (d.data?.type === "spouse") {
@@ -123,6 +154,10 @@ function createLines(
                 return `translate(${x},${y})`;
             });
 
+        // The <text> elements within this <g> are not independently styled or updated and thus can
+        // be simply appended
+
+        // Start date of marriage
         textGroup
             .filter((d) => d.data?.type === "spouse")
             .append("text")
@@ -133,6 +168,7 @@ function createLines(
             .attr("dominant-baseline", "middle")
             .text((d) => generateLinkDateString(d, "Since"));
 
+        // End date of marriage
         textGroup
             .filter((d) => d.data?.type === "spouse")
             .append("text")
@@ -143,6 +179,7 @@ function createLines(
             .attr("dominant-baseline", "middle")
             .text((d) => generateLinkDateString(d, "Until"));
 
+        // Marriage symbol underlay to aid in visibility (blocking out the <polyline>)
         textGroup
             .filter((d) => d.data?.type === "spouse")
             .append("rect")
@@ -151,6 +188,7 @@ function createLines(
             .attr("width", 45)
             .attr("height", 30)
             .attr("fill", "#ffffff");
+        // Marriage symbol
         textGroup
             .filter((d) => d.data?.type === "spouse")
             .append("path")
@@ -162,11 +200,16 @@ function createLines(
     });
 }
 
+// A simple helper function to properly identify a link by its component ids
 function combineIdsOfLink(d: MinHierarchyLink<PersonNode>) {
+    // We sort the ids to ensure the combined id is the same regardless of which direction a link
+    // is constructed from
     return [d.source.data.Id, d.target.data.Id].sort().join("|");
 }
 
+// Calculate the points of a <polyline> so it has a nice, angled design
 function calculatePoints(d: MinHierarchyLink<PersonNode>): string {
+    // Whether it is an ancestor or descendant has an impact of how to form the line
     const directionMult = d.target.data.type === "ancestor" ? -1 : 1;
     const sx = d.source.x;
     const sy = d.source.y;
@@ -176,18 +219,22 @@ function calculatePoints(d: MinHierarchyLink<PersonNode>): string {
 
     switch (d.data?.type) {
         case "spouse": {
+            // Spousal links are direct and implicitly horizontal
             return `${sx},${sy} ${tx},${ty}`;
         }
         default:
             switch (d.target.data.type) {
                 case "descendant-spouse":
+                    // We need to visually ignore links to the spouses of descendants, i.e. fake descendants
                     return "";
                 default:
+                    // Construct the angled line
                     return `${sx},${sy} ${sx},${tyHalf} ${tx},${tyHalf} ${tx},${ty}`;
             }
     }
 }
 
+// Helper function to generate a date string from partial data
 function generateLinkDateString(
     link: MinHierarchyLink<PersonNode, SpouseLink>,
     prefix: "Since" | "Until",
@@ -207,6 +254,7 @@ function generateLinkDateString(
     return `${dayStr}.${monthStr}.${yearStr}`;
 }
 
+// Same concepts apply as documented in {@link createLines} for different elements
 function createNodes(
     container: Selection<SVGGElement, any, any, any>,
     data: MinHierarchyNode<PersonNode>[],
@@ -233,6 +281,9 @@ function createNodes(
         .attr("class", (d) => `node ${d.data.type} ${getClassIsDead(d)}`)
         .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
+    // Most elements of the node are not updated independently of the group and are thus directly appended
+
+    // Node background
     node.append("rect")
         .attr("x", -NODE_WIDTH_HALF)
         .attr("y", -NODE_HEIGHT_HALF)
@@ -250,8 +301,10 @@ function createNodes(
                     return "#f1cd86";
             }
         })
+        // Callback that should load a new family tree based on the clicked node as root
         .on("click", (event, d) => onNodeClick.current(event, d));
 
+    // Death symbol
     node.append("text")
         .attr("x", 20 - NODE_WIDTH_HALF)
         .attr("y", 25 - NODE_HEIGHT_HALF)
@@ -261,6 +314,7 @@ function createNodes(
         .attr("font-weight", "bold")
         .text((d) => (d.data.IsDead === true ? "†" : d.data.IsDead == null ? "?" : ""));
 
+    // Name
     node.append("text")
         .attr("x", 0)
         .attr("y", 20 - NODE_HEIGHT_HALF)
@@ -273,34 +327,35 @@ function createNodes(
             d.data.LastName !== d.data.BirthName ? `geb. ${d.data?.BirthName ?? "???"}` : "",
         );
 
+    // Birthday label
     node.append("text")
         .attr("x", 20 - NODE_WIDTH_HALF)
         .attr("y", 50 - NODE_HEIGHT_HALF)
         .attr("text-anchor", "start")
         .attr("dominant-baseline", "text-before-edge")
-        .text("Geburtstag:");
-    node.append("text")
-        .attr("x", 120 - NODE_WIDTH_HALF)
-        .attr("y", 51 - NODE_HEIGHT_HALF)
+        .text("Geburtstag:")
+        // Birthday content
+        .clone()
+        .attr("dx", 100)
+        .attr("dy", 1)
         .attr("class", "date")
-        .attr("text-anchor", "start")
-        .attr("dominant-baseline", "text-before-edge")
         .text((d) => generateNodeDateString(d, "Birth"));
 
+    // Deathday label
     node.append("text")
         .attr("x", 20 - NODE_WIDTH_HALF)
         .attr("y", 70 - NODE_HEIGHT_HALF)
         .attr("text-anchor", "start")
         .attr("dominant-baseline", "text-before-edge")
-        .text((d) => (d.data.IsDead ? "Todestag:" : ""));
-    node.append("text")
-        .attr("x", 120 - NODE_WIDTH_HALF)
-        .attr("y", 71 - NODE_HEIGHT_HALF)
+        .text((d) => (d.data.IsDead ? "Todestag:" : ""))
+        // Deathday content
+        .clone()
+        .attr("dx", 100)
+        .attr("dy", 1)
         .attr("class", "date")
-        .attr("text-anchor", "start")
-        .attr("dominant-baseline", "text-before-edge")
         .text((d) => (d.data.IsDead ? generateNodeDateString(d, "Death") : ""));
 
+    // The sibling indicator is updated independently of the group and must thus be handled separately
     nodeMerge
         .filter((d) => d.data.Siblings.length > 0)
         .each(function (datum) {
@@ -315,6 +370,7 @@ function createNodes(
                 .append("g")
                 .attr("class", "sibling-indicator")
                 .attr("transform", (d) => {
+                    // Depending on the semantics of the node, the indicator should by rendered to the left or right
                     let x = -30 - NODE_WIDTH_HALF;
                     if (d.data.Gender === "f" || d.data.type === "descendant-spouse") {
                         x = 30 + NODE_WIDTH_HALF;
@@ -348,6 +404,7 @@ function createNodes(
                     ["ancestor", "root-spouse", "descendant-spouse"].includes(d.data.type) ? 1 : 0,
                 );
 
+            // Transparent rectangle to serve as clickable element for the symbol
             siblingGroup
                 .append("rect")
                 .attr("x", -60)
@@ -359,6 +416,7 @@ function createNodes(
                 .attr("fill", "rgba(0, 0, 0, 0)")
                 .on("click", (event, d) => onNodeClick.current(event, d));
 
+            // Chevron as indicator symbol
             siblingGroup
                 .append("path")
                 .attr("d", "M60 16 28 48 60 80")
@@ -368,6 +426,7 @@ function createNodes(
                 .attr("stroke", "#616161")
                 .attr("stroke-width", 4);
 
+            // Number of siblings
             siblingGroup
                 .append("text")
                 .attr("text-anchor", "middle")
@@ -379,6 +438,7 @@ function createNodes(
         });
 }
 
+// Helper function to generate a full name (including age) from partial data
 function generateFullName(node: MinHierarchyNode<PersonNode>) {
     const age = node.data.Age != null ? ` (${node.data.Age})` : "";
     const firstName = node.data.FirstName ? `${node.data.FirstName} ` : "";
@@ -386,6 +446,7 @@ function generateFullName(node: MinHierarchyNode<PersonNode>) {
     return `${firstName}${lastName}${age}`;
 }
 
+// Helper function to generate the correct CSS class for nullable IsDead data
 function getClassIsDead(node: MinHierarchyNode<PersonNode>) {
     switch (node.data.IsDead) {
         case false:
@@ -397,6 +458,7 @@ function getClassIsDead(node: MinHierarchyNode<PersonNode>) {
     }
 }
 
+// Helper function to generate a date string from partial data
 function generateNodeDateString(node: MinHierarchyNode<PersonNode>, prefix: "Birth" | "Death") {
     const day = node.data[`${prefix}DateDay` as keyof PersonNode];
     const month = node.data[`${prefix}DateMonth` as keyof PersonNode];

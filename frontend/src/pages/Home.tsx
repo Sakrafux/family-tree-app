@@ -12,6 +12,7 @@ function Home() {
     const { state, getFamilyTree } = useApiFamilyTree();
     const { showLoading, hideLoading } = useLoading();
 
+    // Load the initial family tree
     useEffect(() => {
         if (!state.data && !state.loading) {
             showLoading(true);
