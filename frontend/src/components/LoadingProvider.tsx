@@ -42,15 +42,15 @@ export const LoadingProvider = ({ children }: PropsWithChildren) => {
     );
 };
 
-export const useLoading = () => {
+export function useLoading() {
     const context = useContext(LoadingContext);
     if (!context) {
         throw new Error("useLoading must be used within a LoadingProvider");
     }
     return context;
-};
+}
 
-const LoadingOverlay = () => {
+function LoadingOverlay() {
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -62,4 +62,4 @@ const LoadingOverlay = () => {
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-white border-t-transparent" />
         </motion.div>
     );
-};
+}

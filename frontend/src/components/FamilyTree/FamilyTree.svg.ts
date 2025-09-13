@@ -1,22 +1,22 @@
 import { select, type Selection } from "d3-selection";
 import type { RefObject } from "react";
 
-import { LAYOUT_HEIGHT, LAYOUT_WIDTH } from "@/components/FamilyTree/FamilyTree";
+import {
+    LAYOUT_HEIGHT,
+    LAYOUT_WIDTH,
+    NODE_HEIGHT,
+    NODE_HEIGHT_HALF,
+    NODE_WIDTH,
+    NODE_WIDTH_HALF,
+    TRANSITION_DURATION,
+} from "@/components/FamilyTree/FamilyTree.constant";
 import type {
     MinHierarchyLink,
     MinHierarchyNode,
+    OnNodeClickFn,
     PersonNode,
     SpouseLink,
-} from "@/components/FamilyTree/FamilyTree.service";
-
-export const TRANSITION_DURATION = 500;
-
-const NODE_WIDTH = 300;
-const NODE_HEIGHT = 105;
-const NODE_WIDTH_HALF = NODE_WIDTH / 2;
-const NODE_HEIGHT_HALF = NODE_HEIGHT / 2;
-
-export type OnNodeClickFn = (event: any, d: MinHierarchyNode<PersonNode>) => void;
+} from "@/components/FamilyTree/FamilyTree.type";
 
 export function updateGraph(
     container: Selection<SVGGElement, any, any, any>,

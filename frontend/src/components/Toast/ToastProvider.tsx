@@ -9,7 +9,7 @@ import {
 import { v7 as uuidv7 } from "uuid";
 
 import { ToastContainer } from "@/components/Toast/Toast";
-import type { Toast, ToastType } from "@/types/types";
+import type { Toast, ToastType } from "@/types";
 
 type ToastContextType = {
     showToast: (type: ToastType, message: string, duration?: number) => void;
@@ -17,7 +17,7 @@ type ToastContextType = {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-export const ToastProvider = ({ children }: PropsWithChildren) => {
+export function ToastProvider({ children }: PropsWithChildren) {
     const [toasts, setToasts] = useState<Toast[]>([]);
     const timers = useRef<Record<string, NodeJS.Timeout>>({});
 
@@ -51,12 +51,12 @@ export const ToastProvider = ({ children }: PropsWithChildren) => {
             <ToastContainer toasts={toasts} onClose={removeToast} />
         </ToastContext.Provider>
     );
-};
+}
 
-export const useToast = () => {
+export function useToast() {
     const context = useContext(ToastContext);
     if (!context) {
         throw new Error("useToast must be used within a ToastProvider");
     }
     return context;
-};
+}

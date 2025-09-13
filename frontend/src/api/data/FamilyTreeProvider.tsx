@@ -8,8 +8,7 @@ import {
 } from "react";
 
 import { useApi } from "@/api/ApiProvider";
-import type { FamilyTreeDto } from "@/types/dto";
-import type { ApiData, ContextAction } from "@/types/types";
+import type { ApiData, ContextAction, FamilyTreeDto } from "@/types";
 
 enum FamilyTreeActions {
     FETCH_START = "FETCH_START",

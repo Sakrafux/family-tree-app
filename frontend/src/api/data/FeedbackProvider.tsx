@@ -9,8 +9,7 @@ import {
 
 import { useApi } from "@/api/ApiProvider";
 import { useToast } from "@/components/Toast/ToastProvider";
-import type { FeedbackDto } from "@/types/dto";
-import type { ApiData, ContextAction } from "@/types/types";
+import type { ApiData, ContextAction, FeedbackDto } from "@/types";
 
 enum FeedbackActions {
     GET_START = "GET_START",

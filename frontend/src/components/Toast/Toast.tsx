@@ -1,15 +1,22 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 
-import type { Toast, ToastType } from "@/types/types";
+import type { Toast, ToastType } from "@/types";
 
-export const ToastContainer = ({
+const toastColors: Record<ToastType, string> = {
+    success: "bg-green-600 text-white",
+    info: "bg-blue-600 text-white",
+    warning: "bg-yellow-500 text-black",
+    error: "bg-red-600 text-white",
+};
+
+export function ToastContainer({
     toasts,
     onClose,
 }: {
     toasts: Toast[];
     onClose: (id: string) => void;
-}) => {
+}) {
     return (
         <div className="fixed top-4 right-4 z-50 flex flex-col space-y-2">
             <AnimatePresence>
@@ -19,16 +26,9 @@ export const ToastContainer = ({
             </AnimatePresence>
         </div>
     );
-};
+}
 
-const toastColors: Record<ToastType, string> = {
-    success: "bg-green-600 text-white",
-    info: "bg-blue-600 text-white",
-    warning: "bg-yellow-500 text-black",
-    error: "bg-red-600 text-white",
-};
-
-export const ToastItem = ({ toast, onClose }: { toast: Toast; onClose: (id: string) => void }) => {
+export function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: string) => void }) {
     return (
         <motion.div
             initial={{ opacity: 0, x: 50 }}
@@ -54,4 +54,4 @@ export const ToastItem = ({ toast, onClose }: { toast: Toast; onClose: (id: stri
             )}
         </motion.div>
     );
-};
+}

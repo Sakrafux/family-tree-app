@@ -8,6 +8,7 @@ const linkActiveClasses =
     "text-gray-900 underline underline-offset-4 underline-gray-900 decoration-2";
 
 function Header() {
+    // TODO properly load log-in information
     const isLoggedIn = false;
 
     return (

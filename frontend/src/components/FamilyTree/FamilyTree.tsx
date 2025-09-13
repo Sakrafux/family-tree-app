@@ -7,6 +7,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider";
 import {
+    LAYOUT_HEIGHT,
+    LAYOUT_WIDTH,
+    TRANSITION_DURATION,
+} from "@/components/FamilyTree/FamilyTree.constant";
+import {
     buildHourglassTree,
     calculateBounds,
     createAncestorSpouseLink,
@@ -15,28 +20,22 @@ import {
     createSiblingNodes,
     createSpouseLinks,
     createSpouseNodes,
-    type MinHierarchyNode,
-    type PersonNode,
 } from "@/components/FamilyTree/FamilyTree.service";
-import {
-    type OnNodeClickFn,
-    TRANSITION_DURATION,
-    updateGraph,
-} from "@/components/FamilyTree/FamilyTree.svg";
+import { updateGraph } from "@/components/FamilyTree/FamilyTree.svg";
+import type {
+    MinHierarchyNode,
+    OnNodeClickFn,
+    PersonNode,
+} from "@/components/FamilyTree/FamilyTree.type";
 import { useLoading } from "@/components/LoadingProvider";
-import type { FamilyTreeDto } from "@/types/dto";
-
-// Horizontal distance between nodes
-export const LAYOUT_WIDTH = 450;
-// Vertical distance between nodes
-export const LAYOUT_HEIGHT = 200;
+import type { FamilyTreeDto } from "@/types";
 
 type FamilyTreeProps = {
     // Initial node to select
     initialId: string;
 };
 
-const FamilyTree = ({ initialId }: FamilyTreeProps) => {
+function FamilyTree({ initialId }: FamilyTreeProps) {
     // We need to keep track of the selected tree, as the context caches all fetched trees, and we
     // must select the one we want
     const [curId, setCurId] = useState(initialId);
@@ -212,6 +211,6 @@ const FamilyTree = ({ initialId }: FamilyTreeProps) => {
             </svg>
         </div>
     );
-};
+}
 
 export default FamilyTree;
