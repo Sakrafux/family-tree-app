@@ -87,8 +87,9 @@ func mapPersonsByDistance(dto *FamilyTreeDto, chPersons chan []*db.Person, chDis
 
 	distances := slices.Insert(<-chDistances, 0, &db.GraphDistance{Id: id, Distance: 0})
 	for _, distance := range distances {
+		// Only map the persons within maxDistance
 		if distance.Distance > int64(maxDistance) {
-			// Because the distances are sorted
+			// Because the distances are sorted, we can stop iterating
 			break
 		}
 
@@ -171,7 +172,7 @@ func relateSpouses(dto *FamilyTreeDto, chMarriageRelations chan []*db.MarriageRe
 		}
 	}
 
-	// Sort spouses deterministically
+	// Sort spouses deterministically by date of marriage
 	for _, person := range dto.Persons {
 		slices.SortFunc(person.Spouses, func(a, b SpouseDto) int {
 			ay, by := derefDateInt32(a.SinceYear), derefDateInt32(b.SinceYear)
@@ -200,7 +201,7 @@ func relateParentsAndChildren(dto *FamilyTreeDto, chParentRelations chan []*db.P
 		}
 	}
 
-	// Sort parents and children deterministically
+	// Sort parents and children deterministically by birthdate
 	for _, person := range dto.Persons {
 		if len(person.Parents) == 2 {
 			if parent1, ok := dto.Persons[person.Parents[0]]; ok && *parent1.Gender == "f" {
@@ -227,7 +228,7 @@ func relateSiblings(dto *FamilyTreeDto, chSiblingRelations chan []*db.SiblingRel
 		}
 	}
 
-	// Sort siblings deterministically
+	// Sort siblings deterministically by birthdate
 	for _, person := range dto.Persons {
 		slices.SortFunc(person.Siblings, func(a, b SiblingDto) int {
 			return compareByBirthDate(dto, a.Id, b.Id)
