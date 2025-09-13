@@ -102,19 +102,14 @@ function createLines(
             .append("polyline")
             .attr("class", (d) => `link-line ${d.data?.type ?? ""}`)
             .attr("opacity", 0)
-            .attr("points", calculatePoints)
-            .attr("fill", "none")
-            .attr("stroke", "#858585")
-            .attr("stroke-width", 3)
-            .attr("stroke-dasharray", (d) => (d.data?.type === "spouse" ? "1,3" : ""));
+            .attr("points", calculateLinkPolylinePoints);
 
         line.merge(lines)
+            .attr("class", (d) => `link-line ${d.data?.type ?? ""}`)
             .transition()
             .duration(TRANSITION_DURATION)
             .style("opacity", 1)
-            .attr("class", (d) => `link-line ${d.data?.type ?? ""}`)
-            .attr("points", calculatePoints)
-            .attr("stroke-dasharray", (d) => (d.data?.type === "spouse" ? "1,3" : ""));
+            .attr("points", calculateLinkPolylinePoints);
 
         // Same as for "lines"
         const textGroups = g
@@ -129,30 +124,14 @@ function createLines(
             .attr("class", (d) => `link-texts ${d.data?.type ?? ""}`)
             // Despite this being immediately updated in the merge, we want to set the initial position
             // or else the groups would transition from the default 0,0 position
-            .attr("transform", (d) => {
-                let shiftRight = 0;
-                if (d.data?.type === "spouse") {
-                    shiftRight = (d.data?.nodesInBetween ?? 0) * LAYOUT_WIDTH;
-                }
-                const x = (d.source.x + d.target.x + shiftRight) / 2;
-                const y = (d.source.y + d.target.y) / 2;
-                return `translate(${x},${y})`;
-            });
+            .attr("transform", calculateLinkTextTransform);
 
         textGroup
             .merge(textGroups)
+            .attr("class", (d) => `link-texts ${d.data?.type ?? ""}`)
             .transition()
             .duration(TRANSITION_DURATION)
-            .attr("class", (d) => `link-texts ${d.data?.type ?? ""}`)
-            .attr("transform", (d) => {
-                let shiftRight = 0;
-                if (d.data?.type === "spouse") {
-                    shiftRight = (d.data?.nodesInBetween ?? 0) * LAYOUT_WIDTH;
-                }
-                const x = (d.source.x + d.target.x + shiftRight) / 2;
-                const y = (d.source.y + d.target.y) / 2;
-                return `translate(${x},${y})`;
-            });
+            .attr("transform", calculateLinkTextTransform);
 
         // The <text> elements within this <g> are not independently styled or updated and thus can
         // be simply appended
@@ -161,22 +140,18 @@ function createLines(
         textGroup
             .filter((d) => d.data?.type === "spouse")
             .append("text")
-            .attr("class", "date")
+            .attr("class", "date text-center")
             .attr("x", 0)
             .attr("y", -25)
-            .attr("text-anchor", "middle")
-            .attr("dominant-baseline", "middle")
             .text((d) => generateLinkDateString(d, "Since"));
 
         // End date of marriage
         textGroup
             .filter((d) => d.data?.type === "spouse")
             .append("text")
-            .attr("class", "date")
+            .attr("class", "date text-center")
             .attr("x", 0)
             .attr("y", 25)
-            .attr("text-anchor", "middle")
-            .attr("dominant-baseline", "middle")
             .text((d) => generateLinkDateString(d, "Until"));
 
         // Marriage symbol underlay to aid in visibility (blocking out the <polyline>)
@@ -208,7 +183,7 @@ function combineIdsOfLink(d: MinHierarchyLink<PersonNode>) {
 }
 
 // Calculate the points of a <polyline> so it has a nice, angled design
-function calculatePoints(d: MinHierarchyLink<PersonNode>): string {
+function calculateLinkPolylinePoints(d: MinHierarchyLink<PersonNode>): string {
     // Whether it is an ancestor or descendant has an impact of how to form the line
     const directionMult = d.target.data.type === "ancestor" ? -1 : 1;
     const sx = d.source.x;
@@ -232,6 +207,16 @@ function calculatePoints(d: MinHierarchyLink<PersonNode>): string {
                     return `${sx},${sy} ${sx},${tyHalf} ${tx},${tyHalf} ${tx},${ty}`;
             }
     }
+}
+
+function calculateLinkTextTransform(d: MinHierarchyLink<PersonNode>) {
+    let shiftRight = 0;
+    if (d.data?.type === "spouse") {
+        shiftRight = (d.data?.nodesInBetween ?? 0) * LAYOUT_WIDTH;
+    }
+    const x = (d.source.x + d.target.x + shiftRight) / 2;
+    const y = (d.source.y + d.target.y) / 2;
+    return `translate(${x},${y})`;
 }
 
 // Helper function to generate a date string from partial data
@@ -270,15 +255,15 @@ function createNodes(
         .enter()
         .append("g")
         .attr("class", (d) => `node ${d.data.type} ${getClassIsDead(d)}`)
-        .attr("transform", (d) => `translate(${d.x},${d.y})`)
-        .attr("opacity", 0);
+        .attr("opacity", 0)
+        .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
     const nodeMerge = node
         .merge(nodes)
+        .attr("class", (d) => `node ${d.data.type} ${getClassIsDead(d)}`)
         .transition()
         .duration(TRANSITION_DURATION)
         .style("opacity", 1)
-        .attr("class", (d) => `node ${d.data.type} ${getClassIsDead(d)}`)
         .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
     // Most elements of the node are not updated independently of the group and are thus directly appended
@@ -306,20 +291,18 @@ function createNodes(
 
     // Death symbol
     node.append("text")
-        .attr("x", 20 - NODE_WIDTH_HALF)
+        .attr("class", "text-center")
+        .attr("x", 25 - NODE_WIDTH_HALF)
         .attr("y", 25 - NODE_HEIGHT_HALF)
-        .attr("text-anchor", "start")
-        .attr("dominant-baseline", "middle")
         .attr("font-size", "24")
         .attr("font-weight", "bold")
         .text((d) => (d.data.IsDead === true ? "†" : d.data.IsDead == null ? "?" : ""));
 
     // Name
     node.append("text")
+        .attr("class", "text-center")
         .attr("x", 0)
         .attr("y", 20 - NODE_HEIGHT_HALF)
-        .attr("text-anchor", "middle")
-        .attr("dominant-baseline", "middle")
         .text(generateFullName)
         .clone()
         .attr("dy", 18)
@@ -329,30 +312,28 @@ function createNodes(
 
     // Birthday label
     node.append("text")
+        .attr("class", "text-start")
         .attr("x", 20 - NODE_WIDTH_HALF)
         .attr("y", 50 - NODE_HEIGHT_HALF)
-        .attr("text-anchor", "start")
-        .attr("dominant-baseline", "text-before-edge")
         .text("Geburtstag:")
         // Birthday content
         .clone()
+        .attr("class", "text-start date")
         .attr("dx", 100)
         .attr("dy", 1)
-        .attr("class", "date")
         .text((d) => generateNodeDateString(d, "Birth"));
 
     // Deathday label
     node.append("text")
+        .attr("class", "text-start")
         .attr("x", 20 - NODE_WIDTH_HALF)
         .attr("y", 70 - NODE_HEIGHT_HALF)
-        .attr("text-anchor", "start")
-        .attr("dominant-baseline", "text-before-edge")
         .text((d) => (d.data.IsDead ? "Todestag:" : ""))
         // Deathday content
         .clone()
+        .attr("class", "text-start date")
         .attr("dx", 100)
         .attr("dy", 1)
-        .attr("class", "date")
         .text((d) => (d.data.IsDead ? generateNodeDateString(d, "Death") : ""));
 
     // The sibling indicator is updated independently of the group and must thus be handled separately
@@ -363,43 +344,21 @@ function createNodes(
                 .selectAll<SVGGElement, MinHierarchyNode<PersonNode>>("g.sibling-indicator")
                 .data([datum], (d) => d.data.Id);
 
-            siblingGroups.exit().transition().duration(TRANSITION_DURATION).remove();
+            siblingGroups.exit().remove();
 
             const siblingGroup = siblingGroups
                 .enter()
                 .append("g")
-                .attr("class", "sibling-indicator")
-                .attr("transform", (d) => {
-                    // Depending on the semantics of the node, the indicator should by rendered to the left or right
-                    let x = -30 - NODE_WIDTH_HALF;
-                    if (d.data.Gender === "f" || d.data.type === "descendant-spouse") {
-                        x = 30 + NODE_WIDTH_HALF;
-                    }
-                    const y = 0;
-                    return `translate(${x},${y})`;
-                })
+                .attr("class", calculateNodeIndicatorClass)
+                .attr("transform", calculateNodeIndicatorTransform)
                 .attr("opacity", 0);
 
             siblingGroup
                 .merge(siblingGroups)
+                .attr("class", calculateNodeIndicatorClass)
                 .transition()
                 .duration(TRANSITION_DURATION)
-                .attr(
-                    "class",
-                    (d) =>
-                        `sibling-indicator ${d.data.Gender === "f" || ["root-spouse", "descendant-spouse"].includes(d.data.type) ? "right-indicator" : "left-indicator"}`,
-                )
-                .attr("transform", (d) => {
-                    let x = -30 - NODE_WIDTH_HALF;
-                    if (
-                        d.data.Gender === "f" ||
-                        ["root-spouse", "descendant-spouse"].includes(d.data.type)
-                    ) {
-                        x = 30 + NODE_WIDTH_HALF;
-                    }
-                    const y = 0;
-                    return `translate(${x},${y})`;
-                })
+                .attr("transform", calculateNodeIndicatorTransform)
                 .attr("opacity", (d) =>
                     ["ancestor", "root-spouse", "descendant-spouse"].includes(d.data.type) ? 1 : 0,
                 );
@@ -417,20 +376,12 @@ function createNodes(
                 .on("click", (event, d) => onNodeClick.current(event, d));
 
             // Chevron as indicator symbol
-            siblingGroup
-                .append("path")
-                .attr("d", "M60 16 28 48 60 80")
-                .attr("stroke-linecap", "round")
-                .attr("stroke-linejoin", "round")
-                .attr("fill", "none")
-                .attr("stroke", "#616161")
-                .attr("stroke-width", 4);
+            siblingGroup.append("path").attr("class", "chevron").attr("d", "M60 16 28 48 60 80");
 
             // Number of siblings
             siblingGroup
                 .append("text")
-                .attr("text-anchor", "middle")
-                .attr("dominant-baseline", "middle")
+                .attr("class", "text-center")
                 .attr("font-size", "24")
                 .attr("font-weight", "bold")
                 .attr("font-color", "#616161")
@@ -469,4 +420,20 @@ function generateNodeDateString(node: MinHierarchyNode<PersonNode>, prefix: "Bir
     const yearStr = year ? year.toString().padStart(4, "0") : "????";
 
     return `${dayStr}.${monthStr}.${yearStr}`;
+}
+
+function calculateNodeIndicatorTransform(d: MinHierarchyNode<PersonNode>) {
+    // Depending on the semantics of the node, the indicator should be rendered to the left or right
+    let x = -30 - NODE_WIDTH_HALF;
+    if (d.data.Gender === "f" || ["root-spouse", "descendant-spouse"].includes(d.data.type)) {
+        x = 30 + NODE_WIDTH_HALF;
+    }
+    const y = 0;
+    return `translate(${x},${y})`;
+}
+
+function calculateNodeIndicatorClass(d: MinHierarchyNode<PersonNode>) {
+    const isRight =
+        d.data.Gender === "f" || ["root-spouse", "descendant-spouse"].includes(d.data.type);
+    return `sibling-indicator ${isRight ? "right-indicator" : "left-indicator"}`;
 }
