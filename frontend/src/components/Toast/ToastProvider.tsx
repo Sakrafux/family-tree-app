@@ -6,6 +6,7 @@ import {
     useRef,
     useState,
 } from "react";
+import { v7 as uuidv7 } from "uuid";
 
 import { ToastContainer } from "@/components/Toast/Toast";
 import type { Toast, ToastType } from "@/types/types";
@@ -30,7 +31,7 @@ export const ToastProvider = ({ children }: PropsWithChildren) => {
 
     const showToast = useCallback(
         (type: ToastType, message: string, duration?: number) => {
-            const id = crypto.randomUUID();
+            const id = uuidv7();
             const newToast: Toast = { id, type, message, duration };
 
             setToasts((prev) => [...prev, newToast]);
