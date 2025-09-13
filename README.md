@@ -40,3 +40,5 @@
   - bug-fixing
 
 - enable db migration
+
+- i18n
