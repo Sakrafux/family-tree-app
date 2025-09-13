@@ -206,3 +206,31 @@ export function createAncestorSpouseLink(
 
     return links;
 }
+
+export function calculateBounds(
+    nodes: MinHierarchyNode<PersonNode>[],
+    width: number,
+    height: number,
+): [[number, number], [number, number]] {
+    let x0 = Infinity;
+    let y0 = Infinity;
+    let x1 = -Infinity;
+    let y1 = -Infinity;
+
+    nodes.forEach((d) => {
+        if (d.x! < x0) x0 = d.x!;
+        if (d.y! < y0) y0 = d.y!;
+        if (d.x! > x1) x1 = d.x!;
+        if (d.y! > y1) y1 = d.y!;
+    });
+
+    x0 -= width / 2;
+    y0 -= height * 0.75;
+    x1 += width / 2;
+    y1 += height * 0.75;
+
+    return [
+        [x0, y0],
+        [x1, y1],
+    ];
+}

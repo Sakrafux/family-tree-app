@@ -9,9 +9,9 @@ import type {
     SpouseLink,
 } from "@/components/FamilyTree/FamilyTree.service";
 
-const TRANSITION_DURATION = 500;
+export const TRANSITION_DURATION = 500;
 
-const NODE_WIDTH = 250;
+const NODE_WIDTH = 300;
 const NODE_HEIGHT = 105;
 const NODE_WIDTH_HALF = NODE_WIDTH / 2;
 const NODE_HEIGHT_HALF = NODE_HEIGHT / 2;
@@ -280,7 +280,7 @@ function createNodes(
         .attr("dominant-baseline", "text-before-edge")
         .text("Geburtstag:");
     node.append("text")
-        .attr("x", 130 - NODE_WIDTH_HALF)
+        .attr("x", 120 - NODE_WIDTH_HALF)
         .attr("y", 51 - NODE_HEIGHT_HALF)
         .attr("class", "date")
         .attr("text-anchor", "start")
@@ -294,7 +294,7 @@ function createNodes(
         .attr("dominant-baseline", "text-before-edge")
         .text((d) => (d.data.IsDead ? "Todestag:" : ""));
     node.append("text")
-        .attr("x", 130 - NODE_WIDTH_HALF)
+        .attr("x", 120 - NODE_WIDTH_HALF)
         .attr("y", 71 - NODE_HEIGHT_HALF)
         .attr("class", "date")
         .attr("text-anchor", "start")
