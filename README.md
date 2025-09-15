@@ -88,9 +88,9 @@ This makes the entire application self-contained, requiring only Docker to run.
     - [x] Add schema migration tooling for SQLite + KuzuDB
     - [x] Versioned upgrade scripts
 
-- [ ] **Internationalization (i18n)**
-    - [ ] Externalize frontend strings
-    - [ ] Support multiple languages
+- [x] **Internationalization (i18n)**
+    - [x] Externalize frontend strings
+    - [x] Support multiple languages
 
 ### UI Controls & Tools
 

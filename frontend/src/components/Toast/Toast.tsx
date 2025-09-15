@@ -35,7 +35,7 @@ export function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: stri
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 50 }}
             transition={{ duration: 0.2 }}
-            className={`flex items-center justify-between px-4 py-2 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${toastColors[toast.type]} max-w-sm`}
+            className={`relative flex items-center justify-between px-4 py-2 shadow-[0_0_20px_rgba(0,0,0,0.4)] ${toastColors[toast.type]} max-w-sm`}
         >
             <span className="cursor-default pr-2">{toast.message}</span>
             <button

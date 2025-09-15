@@ -6,6 +6,7 @@ import {
     useMemo,
     useReducer,
 } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useApi } from "@/api/ApiProvider";
 import { useToast } from "@/components/Toast/ToastProvider";
@@ -85,6 +86,7 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
     const [state, dispatch] = useReducer(feedbackReducer, initialState);
     const api = useApi();
     const { showToast } = useToast();
+    const { t } = useTranslation();
 
     const getAllFeedbacks = useCallback(async () => {
         dispatch({ type: FeedbackActions.GET_START });
@@ -96,9 +98,9 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
             });
         } catch (err) {
             dispatch({ type: FeedbackActions.QUERY_ERROR, error: err });
-            showToast("error", "Feedback-Daten konnten nicht abgefragt werden");
+            showToast("error", t("feedback.context.error-getAllFeedbacks"));
         }
-    }, [api, showToast]);
+    }, [api, showToast, t]);
 
     const postFeedback = useCallback(
         async (text: string) => {
@@ -108,13 +110,13 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
                     type: FeedbackActions.POST_SUCCESS,
                     payload: data,
                 });
-                showToast("success", "Feedback wurde erfolgreich gesendet", 5000);
+                showToast("success", t("feedback.context.success-postFeedback"), 5000);
             } catch (err) {
                 dispatch({ type: FeedbackActions.QUERY_ERROR, error: err });
-                showToast("error", "Feedback konnte nicht gesendet werden");
+                showToast("error", t("feedback.context.error-postFeedback"));
             }
         },
-        [api, showToast],
+        [api, showToast, t],
     );
 
     const patchFeedbackResolve = useCallback(
@@ -129,10 +131,10 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
                 });
             } catch (err) {
                 dispatch({ type: FeedbackActions.QUERY_ERROR, error: err });
-                showToast("error", "Feedback konnte nicht geupdated werden");
+                showToast("error", t("feedback.context.error-patchFeedbackResolve"));
             }
         },
-        [api, showToast],
+        [api, showToast, t],
     );
 
     const value = useMemo(

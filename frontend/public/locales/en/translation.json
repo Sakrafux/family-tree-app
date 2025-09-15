@@ -1,0 +1,40 @@
+{
+    "page": {
+        "title": "Family Tree"
+    },
+    "header": {
+        "heading": "Family Tree",
+        "home": "Family Tree",
+        "feedback": "Feedback",
+        "log-in": "Log in"
+    },
+    "feedback": {
+        "page": {
+            "no-feedback": "No feedback available.",
+            "heading": "Feedback",
+            "open": "Open",
+            "resolve": "Resolve"
+        },
+        "overlay": {
+            "heading": "Feedback",
+            "placeholder": "Feedback here...",
+            "submit": "Submit"
+        },
+        "context": {
+            "error-getAllFeedbacks": "Feedback data could not be fetched",
+            "error-postFeedback": "Feedback could not be submitted",
+            "error-patchFeedbackResolve": "Feedback could not be updated",
+            "success-postFeedback": "Feedback was successfully submitted"
+        }
+    },
+    "family-tree": {
+        "context": {
+            "error-getFamilyTree": "Family Tree could not be fetched"
+        },
+        "component": {
+            "birth-name": "born",
+            "birthday": "Birthday",
+            "deathday": "Deathday"
+        }
+    }
+}

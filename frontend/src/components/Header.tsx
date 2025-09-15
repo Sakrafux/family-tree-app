@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 
 import AvatarSvg from "@/assets/avatar.svg?react";
 import BellSvg from "@/assets/bell.svg?react";
+import { useLoading } from "@/components/LoadingProvider";
 
 const linkBaseClasses = "text-gray-600 hover:text-gray-900";
 const linkActiveClasses =
@@ -11,11 +13,14 @@ function Header() {
     // TODO properly load log-in information
     const isLoggedIn = false;
 
+    const { showLoading, hideLoading } = useLoading();
+    const { t, i18n } = useTranslation();
+
     return (
         <header className="header-height sticky top-0 bg-white px-6 py-4 shadow-md">
             <div className="text-container flex items-center justify-between">
                 <div className="flex-shrink-0 cursor-default">
-                    <h1 className="text-xl font-bold text-gray-900">Stammbaum Hell</h1>
+                    <h1 className="text-xl font-bold text-gray-900">{t("header.heading")}</h1>
                 </div>
 
                 <nav className="hidden items-center space-x-8 md:flex">
@@ -25,7 +30,7 @@ function Header() {
                             `${linkBaseClasses} ${isActive ? linkActiveClasses : ""}`
                         }
                     >
-                        Home
+                        {t("header.home")}
                     </NavLink>
                     <NavLink
                         to="/feedback"
@@ -33,7 +38,7 @@ function Header() {
                             `${linkBaseClasses} ${isActive ? linkActiveClasses : ""}`
                         }
                     >
-                        Feedback
+                        {t("header.feedback")}
                     </NavLink>
                 </nav>
 
@@ -49,12 +54,43 @@ function Header() {
                         </>
                     ) : (
                         <>
-                            <button className="cursor-pointer border border-gray-900 bg-white px-5 py-1 font-medium text-gray-900 transition-colors duration-200 hover:bg-gray-600 hover:text-white">
-                                Sign In
+                            <button className="cursor-pointer border border-gray-900 bg-white px-5 py-1 font-medium text-gray-900 transition-colors duration-200 hover:bg-gray-600 hover:text-white active:bg-gray-800">
+                                {t("header.log-in")}
                             </button>
                         </>
                     )}
                 </div>
+            </div>
+            <div className="absolute top-4 right-6">
+                {i18n.language === "en" ? (
+                    <button
+                        onClick={async () => {
+                            showLoading();
+                            await i18n.changeLanguage("de");
+                            hideLoading();
+                        }}
+                        aria-label="Deutsch"
+                        className="cursor-pointer"
+                    >
+                        <span role="img" aria-hidden="true" className="text-2xl">
+                            🇦🇹
+                        </span>
+                    </button>
+                ) : (
+                    <button
+                        onClick={async () => {
+                            showLoading();
+                            await i18n.changeLanguage("en");
+                            hideLoading();
+                        }}
+                        aria-label="English"
+                        className="cursor-pointer"
+                    >
+                        <span role="img" aria-hidden="true" className="text-2xl">
+                            🇬🇧
+                        </span>
+                    </button>
+                )}
             </div>
         </header>
     );

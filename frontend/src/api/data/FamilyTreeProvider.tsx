@@ -6,6 +6,7 @@ import {
     useMemo,
     useReducer,
 } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useApi } from "@/api/ApiProvider";
 import { useToast } from "@/components/Toast/ToastProvider";
@@ -61,6 +62,7 @@ export function FamilyTreeProvider({ children }: PropsWithChildren) {
     const [state, dispatch] = useReducer(familyTreeReducer, initialState);
     const api = useApi();
     const { showToast } = useToast();
+    const { t } = useTranslation();
 
     const getFamilyTree = useCallback(
         async (id: string, distance?: number) => {
@@ -79,10 +81,10 @@ export function FamilyTreeProvider({ children }: PropsWithChildren) {
                 });
             } catch (err) {
                 dispatch({ type: FamilyTreeActions.FETCH_ERROR, error: err });
-                showToast("error", "Stammbaum konnte nicht geladen werden");
+                showToast("error", t("family-tree.context.error-getFamilyTree"));
             }
         },
-        [api, showToast, state.data],
+        [api, showToast, state.data, t],
     );
 
     const value = useMemo(() => ({ state, getFamilyTree: getFamilyTree }), [getFamilyTree, state]);

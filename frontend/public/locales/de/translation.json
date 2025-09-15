@@ -1,0 +1,40 @@
+{
+    "page": {
+        "title": "Stammbaum"
+    },
+    "header": {
+        "heading": "Stammbaum",
+        "home": "Stammbaum",
+        "feedback": "Feedback",
+        "log-in": "Anmelden"
+    },
+    "feedback": {
+        "page": {
+            "no-feedback": "Kein Feedback verfügbar.",
+            "heading": "Feedback",
+            "open": "Öffnen",
+            "resolve": "Erledigen"
+        },
+        "overlay": {
+            "heading": "Feedback",
+            "placeholder": "Feedback hier...",
+            "submit": "Senden"
+        },
+        "context": {
+            "error-getAllFeedbacks": "Feedback-Daten konnten nicht abgefragt werden",
+            "error-postFeedback": "Feedback konnte nicht gesendet werden",
+            "error-patchFeedbackResolve": "Feedback konnte nicht geupdated werden",
+            "success-postFeedback": "Feedback wurde erfolgreich gesendet"
+        }
+    },
+    "family-tree": {
+        "context": {
+            "error-getFamilyTree": "Stammbaum konnte nicht geladen werden"
+        },
+        "component": {
+            "birth-name": "geb.",
+            "birthday": "Geburtstag",
+            "deathday": "Todestag"
+        }
+    }
+}

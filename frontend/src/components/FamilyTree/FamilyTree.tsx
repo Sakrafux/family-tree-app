@@ -4,6 +4,7 @@ import * as d3 from "d3-hierarchy";
 import { select } from "d3-selection";
 import { zoom, zoomIdentity, ZoomTransform } from "d3-zoom";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider";
 import {
@@ -54,6 +55,7 @@ function FamilyTree({ initialId }: FamilyTreeProps) {
 
     const { state, getFamilyTree } = useApiFamilyTree();
     const { showLoading, hideLoading } = useLoading();
+    const { t, i18n } = useTranslation();
 
     // Handles a click on a node, which triggers a fetch of a new family-tree based on the clicked
     // node as new root, which eventually causes the graph to reload and update
@@ -83,6 +85,16 @@ function FamilyTree({ initialId }: FamilyTreeProps) {
             setFamilyTree(state.data![curId]);
         }
     }, [curId, state.data]);
+
+    // In case the user changes the language, trigger a complete rerender by resetting the data
+    useEffect(() => {
+        if (!containerRef.current) return;
+
+        // Remove all elements...
+        select(containerRef.current).selectAll("*").remove();
+        // ...and trigger a rerender
+        setFamilyTree((cur) => (cur ? { ...cur } : undefined));
+    }, [i18n.language]);
 
     useEffect(() => {
         // Ensure <svg> and <g> nodes are bound and data is fetched
@@ -198,8 +210,8 @@ function FamilyTree({ initialId }: FamilyTreeProps) {
             .call(zoomBehavior.transform, initialTransform);
 
         // Enter new nodes, update moved nodes, delete old nodes
-        updateGraph(container, nodes, links, onNodeClickRef);
-    }, [familyTree, onNodeClick]); // Only "familyTree" is expected to change
+        updateGraph(container, nodes, links, onNodeClickRef, t);
+    }, [familyTree, onNodeClick, t]); // Only "familyTree" is expected to change
 
     // <div> to ensure no issues with overflow
     // <svg> as effective viewing port

@@ -1,4 +1,5 @@
 import { select, type Selection } from "d3-selection";
+import type { TFunction } from "i18next";
 import type { RefObject } from "react";
 
 import {
@@ -23,6 +24,7 @@ export function updateGraph(
     nodes: MinHierarchyNode<PersonNode>[],
     links: MinHierarchyLink<PersonNode>[],
     onNodeClick: RefObject<OnNodeClickFn>,
+    t: TFunction<"translation", undefined>,
 ) {
     // Create containers for links and nodes to ensure nodes are always rendered after links
     // Thus, the order of creation is important
@@ -36,7 +38,7 @@ export function updateGraph(
     }
 
     createLines(linkContainer, links);
-    createNodes(nodeContainer, nodes, onNodeClick);
+    createNodes(nodeContainer, nodes, onNodeClick, t);
 }
 
 function createLines(
@@ -244,6 +246,7 @@ function createNodes(
     container: Selection<SVGGElement, any, any, any>,
     data: MinHierarchyNode<PersonNode>[],
     onNodeClick: RefObject<OnNodeClickFn>,
+    t: TFunction<"translation", undefined>,
 ) {
     const nodes = container
         .selectAll<SVGGElement, MinHierarchyNode<PersonNode>>(".node")
@@ -307,7 +310,9 @@ function createNodes(
         .clone()
         .attr("dy", 18)
         .text((d) =>
-            d.data.LastName !== d.data.BirthName ? `geb. ${d.data?.BirthName ?? "???"}` : "",
+            d.data.LastName !== d.data.BirthName
+                ? `${t("family-tree.component.birth-name")} ${d.data?.BirthName ?? "???"}`
+                : "",
         );
 
     // Birthday label
@@ -315,7 +320,7 @@ function createNodes(
         .attr("class", "text-start")
         .attr("x", 20 - NODE_WIDTH_HALF)
         .attr("y", 50 - NODE_HEIGHT_HALF)
-        .text("Geburtstag:")
+        .text(`${t("family-tree.component.birthday")}:`)
         // Birthday content
         .clone()
         .attr("class", "text-start date")
@@ -328,7 +333,7 @@ function createNodes(
         .attr("class", "text-start")
         .attr("x", 20 - NODE_WIDTH_HALF)
         .attr("y", 70 - NODE_HEIGHT_HALF)
-        .text((d) => (d.data.IsDead ? "Todestag:" : ""))
+        .text((d) => (d.data.IsDead ? `${t("family-tree.component.deathday")}:` : ""))
         // Deathday content
         .clone()
         .attr("class", "text-start date")
