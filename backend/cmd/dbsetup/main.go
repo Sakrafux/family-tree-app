@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 
 	"github.com/kuzudb/go-kuzu"
 	_ "modernc.org/sqlite"
@@ -25,12 +26,22 @@ func main() {
 	initSqlite(*dbSqlitePath)
 }
 
+func publicOrPrivateData(dataPath string) string {
+	privatePath := path.Join(dataPath, "private")
+	entries, err := os.ReadDir(privatePath)
+	if err != nil || len(entries) == 0 {
+		return dataPath
+	}
+	return privatePath
+}
+
 func initKuzu(dbPath string, dataPathPrefix string) {
 	log.Println("[kuzu] Setting up database...")
 	if _, err := os.Stat(dbPath); err == nil {
 		log.Println("[kuzu] Database already exists")
 		return
 	}
+	dataPathPrefix = publicOrPrivateData(dataPathPrefix)
 	// TODO possibly extend this program to deal with migrations for future extensions
 
 	log.Println("[kuzu] Creating database...")

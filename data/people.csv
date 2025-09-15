@@ -1,0 +1,15 @@
+id,first_name,middle_name,last_name,birth_name,gender,dead,birth_date_year,birth_date_month,birth_date_day,death_date_year,death_date_month,death_date_day
+01994d49-826f-76ac-aead-5bdf618ef2c5,John,Edward,Smith,Smith,m,false,1950,5,12,,,
+01994d49-8270-755a-bbb1-310ed0140db2,Mary,Anne,Smith,Smith,f,false,1952,7,20,,,
+01994d49-8270-755a-bbb1-37d4fda28301,Robert,James,Smith,Smith,m,false,1975,3,8,,,
+01994d49-8270-755a-bbb1-390cb53d432b,Linda,Marie,Smith,Davis,f,false,1957,11,30,,,
+01994d49-8270-755a-bbb1-3d7704871402,Michael,Lee,Smith,Smith,m,false,2000,6,15,,,
+01994d49-8270-755a-bbb1-42bf3f1fd9ba,Emma,Grace,Smith,Smith,f,false,2002,9,22,,,
+01994d49-8270-755a-bbb1-4eac575bec0f,Thomas,Edward,Smith,Smith,m,true,1925,,,1980,12,
+01994d49-8270-755a-bbb1-50baa8e31af1,Elizabeth,Rose,Smith,Johnson,f,true,,,,1995,3,23
+01994d49-8270-755a-bbb1-5435c2658136,Charles,Henry,Davis,Davis,m,true,1950,,,,,
+01994d49-8270-755a-bbb1-5a0ee242a486,Patricia,Louise,Brown,Brown,f,true,1951,2,18,2015,11,3
+01994d49-8270-755a-bbb1-5cb5aaa32746,Daniel,John,Smith,Smith,m,false,1978,4,9,,,
+01994d49-8270-755a-bbb1-616f585516a3,Alice,Marie,Smith,Walsh,f,false,1980,12,12,,,
+01994d49-8270-755a-bbb1-65adc88896bb,James,Robert,Smith,Smith,m,false,2005,3,3,,,
+01994d49-8270-755a-bbb1-68a322cd4491,Olivia,Jane,Smith,Smith,f,false,2008,5,20,,,

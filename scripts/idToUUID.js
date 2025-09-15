@@ -6,9 +6,19 @@ const csv = require("csv-parser");
 const { createObjectCsvWriter } = require("csv-writer");
 const { v7: uuidv7 } = require("uuid");
 
+const args = process.argv.slice(2);
+
+const options = {};
+args.forEach(arg => {
+    const [key, value] = arg.split('=');
+    if (key.startsWith('--')) {
+        options[key.slice(2)] = value;
+    }
+});
+
 // Config
-const inputDir = "../data";
-const outputDir = "../data";
+const inputDir = options["path"] ?? "../data";
+const outputDir = options["path"] ?? "../data";
 const entityFile = "people.csv";
 const relationFiles = ["marriage-relations.csv", "parent-relations.csv"];
 const idColumn = "id";
