@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { useApi } from "@/api/ApiProvider";
+import { useToast } from "@/components/Toast/ToastProvider";
 import type { ApiData, ContextAction, FamilyTreeDto } from "@/types";
 
 enum FamilyTreeActions {
@@ -59,6 +60,7 @@ const initialState: ApiData<Record<string, FamilyTreeDto>> = {
 export function FamilyTreeProvider({ children }: PropsWithChildren) {
     const [state, dispatch] = useReducer(familyTreeReducer, initialState);
     const api = useApi();
+    const { showToast } = useToast();
 
     const getFamilyTree = useCallback(
         async (id: string, distance?: number) => {
@@ -77,9 +79,10 @@ export function FamilyTreeProvider({ children }: PropsWithChildren) {
                 });
             } catch (err) {
                 dispatch({ type: FamilyTreeActions.FETCH_ERROR, error: err });
+                showToast("error", "Stammbaum konnte nicht geladen werden");
             }
         },
-        [api, state.data],
+        [api, showToast, state.data],
     );
 
     const value = useMemo(() => ({ state, getFamilyTree: getFamilyTree }), [getFamilyTree, state]);

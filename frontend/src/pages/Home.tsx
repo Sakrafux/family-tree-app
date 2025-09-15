@@ -14,7 +14,7 @@ function Home() {
 
     // Load the initial family tree
     useEffect(() => {
-        if (!state.data && !state.loading) {
+        if (!state.data && !state.loading && !state.error) {
             showLoading(true);
             getFamilyTree(ID_TO_QUERY).then(() => hideLoading());
         }
