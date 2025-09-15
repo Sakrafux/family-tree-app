@@ -36,6 +36,7 @@ FROM debian:bookworm-slim as db-setup
 WORKDIR /app
 
 COPY --from=builder-be /app/db-setup .
+COPY --from=builder-be "/app/cmd/dbsetup/migrations" ./migrations
 
 # As we are not statically linking, we need to copy the underlying C library...
 COPY --from=builder-be /go/pkg/mod/github.com/kuzudb/go-kuzu@v0.11.2/lib/dynamic/linux-amd64/libkuzu.so /usr/local/lib/

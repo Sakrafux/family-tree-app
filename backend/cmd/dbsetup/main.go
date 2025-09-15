@@ -7,8 +7,12 @@ import (
 	"log"
 	"os"
 	"path"
+	"slices"
+	"strconv"
+	"strings"
 
 	"github.com/kuzudb/go-kuzu"
+	"github.com/samber/lo"
 	_ "modernc.org/sqlite"
 )
 
@@ -39,12 +43,11 @@ func initKuzu(dbPath string, dataPathPrefix string) {
 	log.Println("[kuzu] Setting up database...")
 	if _, err := os.Stat(dbPath); err == nil {
 		log.Println("[kuzu] Database already exists")
-		return
+	} else {
+		log.Println("[kuzu] Creating database...")
 	}
 	dataPathPrefix = publicOrPrivateData(dataPathPrefix)
-	// TODO possibly extend this program to deal with migrations for future extensions
 
-	log.Println("[kuzu] Creating database...")
 	systemConfig := kuzu.DefaultSystemConfig()
 	systemConfig.BufferPoolSize = 1024 * 1024 * 50 // 50 MB buffer
 	db, err := kuzu.OpenDatabase(dbPath, systemConfig)
@@ -52,7 +55,6 @@ func initKuzu(dbPath string, dataPathPrefix string) {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	log.Println("[kuzu] Database created")
 
 	log.Println("[kuzu] Connecting to database...")
 	conn, err := kuzu.OpenConnection(db)
@@ -62,63 +64,60 @@ func initKuzu(dbPath string, dataPathPrefix string) {
 	defer conn.Close()
 	log.Println("[kuzu] Connected to database")
 
-	log.Println("[kuzu] Creating tables...")
-	queries := []string{
-		`CREATE NODE TABLE Person (
-			id UUID PRIMARY KEY,
-			first_name STRING,
-			middle_name STRING,
-			last_name STRING,
-			birth_name STRING,
-			gender STRING,
-			is_dead BOOLEAN,
-			birth_date_year INT,
-			birth_date_month INT,
-			birth_date_day INT,
-			death_date_year INT,
-			death_date_month INT,
-			death_date_day INT
-		)`,
-		`CREATE REL TABLE IS_PARENT_OF(FROM Person TO Person)`,
-		`CREATE REL TABLE IS_MARRIED(
-			FROM Person TO Person,
-			since_year INT,
-			since_month INT,
-			since_day INT,
-			until_year INT,
-			until_month INT,
-			until_day INT
-		)`,
-		`CREATE REL TABLE IS_SIBLING(FROM Person TO Person, is_half BOOLEAN)`,
-		fmt.Sprintf("COPY Person FROM \"%s/people.csv\" (HEADER=true)", dataPathPrefix),
-		fmt.Sprintf("COPY IS_PARENT_OF FROM \"%s/parent-relations.csv\" (HEADER=true)", dataPathPrefix),
-		fmt.Sprintf("COPY IS_MARRIED FROM \"%s/marriage-relations.csv\" (HEADER=true)", dataPathPrefix),
+	log.Println("[kuzu] Starting migrations...")
+	entries, err := os.ReadDir("./migrations/kuzu")
+	if err != nil {
+		log.Fatal(err)
 	}
-	for _, query := range queries {
+
+	lastMigration := 0
+	data, err := os.ReadFile("migration-version-kuzu.txt")
+	if err != nil {
+		if !os.IsNotExist(err) {
+			log.Fatal(err)
+		}
+	} else if number, err := strconv.Atoi(string(data)); err == nil {
+		lastMigration = number
+	}
+
+	fileNames := make(map[int]string)
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			if number, err := strconv.Atoi(strings.Split(entry.Name(), "_")[0]); err == nil {
+				fileNames[number] = entry.Name()
+			}
+		}
+	}
+	keys := lo.Keys(fileNames)
+	slices.Sort(keys)
+
+	for _, key := range keys {
+		fileName := fileNames[key]
+		log.Println("[kuzu] Applying " + fileName + "...")
+		if key <= lastMigration {
+			log.Println("[kuzu] Already applied " + fileName)
+			continue
+		}
+
+		rawQuery, err := os.ReadFile("./migrations/kuzu/" + fileName)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		query := strings.Replace(string(rawQuery), "${dataPathPrefix}", dataPathPrefix, -1)
+
 		queryResult, err := conn.Query(query)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer queryResult.Close()
-	}
-	log.Println("[kuzu] Tables created")
+		log.Println("[kuzu] Applied " + fileName)
 
-	log.Println("[kuzu] Inferring sibling relationships...")
-	queryResult, err := conn.Query(`
-		MATCH (p1:Person)<-[:IS_PARENT_OF]-(parent)-[:IS_PARENT_OF]->(p2:Person)
-		WHERE id(p1) < id(p2)
-		WITH p1, p2, collect(DISTINCT parent) AS parents
-		MERGE (p1)-[s:IS_SIBLING]->(p2)
-		  SET s.is_half = CASE 
-							WHEN size(parents) = 1 THEN true 
-							ELSE false 
-						  END;
-	`)
-	if err != nil {
-		log.Fatal(err)
+		err = os.WriteFile("migration-version-kuzu.txt", []byte(fmt.Sprintf("%d", key)), 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
-	defer queryResult.Close()
-	log.Println("[kuzu] Sibling relationships inferred")
 
 	log.Println("[kuzu] Setup complete")
 }
@@ -127,29 +126,67 @@ func initSqlite(dbPath string) {
 	log.Println("[sqlite] Setting up database...")
 	if _, err := os.Stat(dbPath); err == nil {
 		log.Println("[sqlite] Database already exists")
-		return
+	} else {
+		log.Println("[sqlite] Creating database...")
 	}
 
-	log.Println("[sqlite] Creating database...")
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	log.Println("[sqlite] Database created")
 
-	log.Println("[sqlite] Creating tables...")
-	if _, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS feedback (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			text TEXT NOT NULL,
-			creation_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-			is_resolved INTEGER DEFAULT 0
-		);
-	`); err != nil {
+	log.Println("[sqlite] Starting migrations...")
+	entries, err := os.ReadDir("./migrations/sql")
+	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("[sqlite] Tables created")
 
+	lastMigration := 0
+	data, err := os.ReadFile("migration-version-sql.txt")
+	if err != nil {
+		if !os.IsNotExist(err) {
+			log.Fatal(err)
+		}
+	} else if number, err := strconv.Atoi(string(data)); err == nil {
+		lastMigration = number
+	}
+
+	fileNames := make(map[int]string)
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			if number, err := strconv.Atoi(strings.Split(entry.Name(), "_")[0]); err == nil {
+				fileNames[number] = entry.Name()
+			}
+		}
+	}
+	keys := lo.Keys(fileNames)
+	slices.Sort(keys)
+
+	for _, key := range keys {
+		fileName := fileNames[key]
+		log.Println("[sqlite] Applying " + fileName + "...")
+		if key <= lastMigration {
+			log.Println("[sqlite] Already applied " + fileName)
+			continue
+		}
+
+		rawQuery, err := os.ReadFile("./migrations/sql/" + fileName)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		query := string(rawQuery)
+
+		if _, err = db.Exec(query); err != nil {
+			log.Fatal(err)
+		}
+		log.Println("[sqlite] Applied " + fileName)
+
+		err = os.WriteFile("migration-version-sqlite.txt", []byte(fmt.Sprintf("%d", key)), 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 	log.Println("[sqlite] Setup complete")
 }

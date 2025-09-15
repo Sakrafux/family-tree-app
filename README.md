@@ -84,9 +84,9 @@ This makes the entire application self-contained, requiring only Docker to run.
     - [ ] Admin -- can manage feedback and review/accept data changes
   - [ ] First iteration with read-only users and writing admins
 
-- [ ] **Database Migration Support**
-    - [ ] Add schema migration tooling for SQLite + KuzuDB
-    - [ ] Versioned upgrade scripts
+- [x] **Database Migration Support**
+    - [x] Add schema migration tooling for SQLite + KuzuDB
+    - [x] Versioned upgrade scripts
 
 - [ ] **Internationalization (i18n)**
     - [ ] Externalize frontend strings
@@ -127,3 +127,6 @@ This makes the entire application self-contained, requiring only Docker to run.
     - Cluster relatives by city or region
 
 ### Miscellaneous
+
+- [ ] **Export Data as CSV**
+  - Allow for exporting all the data in the graph database as CSVs
