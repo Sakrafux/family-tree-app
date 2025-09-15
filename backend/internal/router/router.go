@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Sakrafux/family-tree-app/backend/internal/api"
+	"github.com/Sakrafux/family-tree-app/backend/internal/constants"
 	"github.com/kuzudb/go-kuzu"
 )
 
@@ -14,18 +15,14 @@ func CreaterRouter(kuzuConn *kuzu.Connection, sqlDb *sql.DB) *AuthServeMux {
 	apiHandler := api.NewHandler(kuzuConn, sqlDb)
 	apiRouter := NewAuthServeMux()
 
-	apiRouter.HandleFunc("GET /family-tree/{id}", apiHandler.GetFamilyTree)
-	apiRouter.HandleFunc("GET /feedbacks", apiHandler.GetAllFeedbacks)
-	apiRouter.HandleFunc("POST /feedbacks", apiHandler.PostFeedback)
+	apiRouter.HandleFunc("GET /family-tree/{id}", apiHandler.GetFamilyTree, constants.AUTH_PERMISSION_READ)
+	apiRouter.HandleFunc("GET /feedbacks", apiHandler.GetAllFeedbacks, constants.AUTH_PERMISSION_ADMIN)
+	apiRouter.HandleFunc("POST /feedbacks", apiHandler.PostFeedback, constants.AUTH_PERMISSION_ADMIN)
 	apiRouter.HandleFunc("OPTIONS /feedbacks", nullHandler)
-	apiRouter.HandleFunc("PATCH /feedbacks/{id}", apiHandler.PatchFeedbackResolve)
+	apiRouter.HandleFunc("PATCH /feedbacks/{id}", apiHandler.PatchFeedbackResolve, constants.AUTH_PERMISSION_ADMIN)
 	apiRouter.HandleFunc("OPTIONS /feedbacks/{id}", nullHandler)
 
 	router.Handle("/", apiRouter)
-
-	// TODO apply proper RBAC with this reference code
-	//apiRouter.HandleFunc("GET /graph/complete", apiHandler.GetCompleteGraphData, constants.AUTH_PERMISSION_ADMIN)
-	//router.Handle("/", apiRouter, constants.AUTH_PERMISSION_READ)
 
 	router.Handle("/public/", http.StripPrefix("/public", createPublicRouter()))
 

@@ -19,7 +19,7 @@ func (a *AuthServeMux) HandleFunc(pattern string, handler func(http.ResponseWrit
 		a.ServeMux.HandleFunc(pattern, handler)
 		return
 	}
-	a.ServeMux.Handle(pattern, middleware.Authentication(middleware.Authorization(permissions)(http.HandlerFunc(handler))))
+	a.ServeMux.Handle(pattern, middleware.Authorization(permissions)(http.HandlerFunc(handler)))
 }
 
 func (a *AuthServeMux) Handle(pattern string, handler http.Handler, permissions ...string) {
@@ -27,5 +27,5 @@ func (a *AuthServeMux) Handle(pattern string, handler http.Handler, permissions 
 		a.ServeMux.Handle(pattern, handler)
 		return
 	}
-	a.ServeMux.Handle(pattern, middleware.Authentication(middleware.Authorization(permissions)(handler)))
+	a.ServeMux.Handle(pattern, middleware.Authorization(permissions)(handler))
 }

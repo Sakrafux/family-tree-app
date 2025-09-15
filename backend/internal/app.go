@@ -61,7 +61,7 @@ func (app *App) createRouter() http.Handler {
 	stack := middleware.CreateStack(
 		middleware.Logging,
 		middleware.Cors,
-		middleware.LoadUser,
+		middleware.Authentication(app.db.sqlDB),
 	)
 
 	return stack(router.CreaterRouter(app.db.kuzuConn, app.db.sqlDB))

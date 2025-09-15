@@ -8,3 +8,11 @@ type Feedback struct {
 	Timestamp  time.Time
 	IsResolved bool
 }
+
+type User struct {
+	Id       int
+	Username string
+	Password string
+	Salt     string
+	Role     string
+}

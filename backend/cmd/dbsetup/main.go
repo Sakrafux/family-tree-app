@@ -27,7 +27,7 @@ func main() {
 	flag.Parse()
 
 	initKuzu(*dbKuzuPath, *dataPathPrefix)
-	initSqlite(*dbSqlitePath)
+	initSqlite(*dbSqlitePath, *dataPathPrefix)
 }
 
 func publicOrPrivateData(dataPath string) string {
@@ -104,7 +104,8 @@ func initKuzu(dbPath string, dataPathPrefix string) {
 			log.Fatal(err)
 		}
 
-		query := strings.Replace(string(rawQuery), "${dataPathPrefix}", dataPathPrefix, -1)
+		query := string(rawQuery)
+		query = strings.Replace(query, "${dataPathPrefix}", dataPathPrefix, -1)
 
 		queryResult, err := conn.Query(query)
 		if err != nil {
@@ -122,7 +123,7 @@ func initKuzu(dbPath string, dataPathPrefix string) {
 	log.Println("[kuzu] Setup complete")
 }
 
-func initSqlite(dbPath string) {
+func initSqlite(dbPath string, dataPathPrefix string) {
 	log.Println("[sqlite] Setting up database...")
 	if _, err := os.Stat(dbPath); err == nil {
 		log.Println("[sqlite] Database already exists")
@@ -163,6 +164,8 @@ func initSqlite(dbPath string) {
 	keys := lo.Keys(fileNames)
 	slices.Sort(keys)
 
+	userInserts := createUserValues(dataPathPrefix)
+
 	for _, key := range keys {
 		fileName := fileNames[key]
 		log.Println("[sqlite] Applying " + fileName + "...")
@@ -177,6 +180,7 @@ func initSqlite(dbPath string) {
 		}
 
 		query := string(rawQuery)
+		query = strings.Replace(query, "${users}", userInserts, -1)
 
 		if _, err = db.Exec(query); err != nil {
 			log.Fatal(err)
