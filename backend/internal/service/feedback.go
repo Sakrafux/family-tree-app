@@ -3,8 +3,8 @@ package service
 import (
 	"database/sql"
 
-	"github.com/Sakrafux/family-tree/backend/internal/db"
-	"github.com/Sakrafux/family-tree/backend/internal/errors"
+	"github.com/Sakrafux/family-tree-app/backend/internal/db"
+	"github.com/Sakrafux/family-tree-app/backend/internal/errors"
 	"github.com/samber/lo"
 )
 

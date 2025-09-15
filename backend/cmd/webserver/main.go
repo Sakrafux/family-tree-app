@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/Sakrafux/family-tree/backend/internal"
+	"github.com/Sakrafux/family-tree-app/backend/internal"
 )
 
 const DB_KUZU_PATH string = "../dbsetup/example.kuzu"

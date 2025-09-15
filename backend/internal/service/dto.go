@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/Sakrafux/family-tree/backend/internal/db"
+	"github.com/Sakrafux/family-tree-app/backend/internal/db"
 	"github.com/google/uuid"
 )
 

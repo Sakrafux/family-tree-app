@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Sakrafux/family-tree/backend/internal/constants"
+	"github.com/Sakrafux/family-tree-app/backend/internal/constants"
 )
 
 func LoadUser(next http.Handler) http.Handler {

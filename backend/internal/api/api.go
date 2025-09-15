@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Sakrafux/family-tree/backend/internal/errors"
-	"github.com/Sakrafux/family-tree/backend/internal/service"
+	"github.com/Sakrafux/family-tree-app/backend/internal/errors"
+	"github.com/Sakrafux/family-tree-app/backend/internal/service"
 	"github.com/google/uuid"
 	"github.com/kuzudb/go-kuzu"
 )

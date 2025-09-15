@@ -6,8 +6,8 @@ import (
 	"slices"
 	"time"
 
-	"github.com/Sakrafux/family-tree/backend/internal/db"
-	"github.com/Sakrafux/family-tree/backend/internal/errors"
+	"github.com/Sakrafux/family-tree-app/backend/internal/db"
+	"github.com/Sakrafux/family-tree-app/backend/internal/errors"
 	"github.com/google/uuid"
 	"github.com/kuzudb/go-kuzu"
 	"github.com/samber/lo"

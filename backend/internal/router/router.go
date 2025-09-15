@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/Sakrafux/family-tree/backend/internal/api"
+	"github.com/Sakrafux/family-tree-app/backend/internal/api"
 	"github.com/kuzudb/go-kuzu"
 )
 

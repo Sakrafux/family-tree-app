@@ -1,4 +1,4 @@
-module github.com/Sakrafux/family-tree/backend
+module github.com/Sakrafux/family-tree-app/backend
 
 go 1.25.0
 

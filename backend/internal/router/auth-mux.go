@@ -3,7 +3,7 @@ package router
 import (
 	"net/http"
 
-	"github.com/Sakrafux/family-tree/backend/internal/middleware"
+	"github.com/Sakrafux/family-tree-app/backend/internal/middleware"
 )
 
 type AuthServeMux struct {

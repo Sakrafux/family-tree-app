@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Sakrafux/family-tree/backend/internal/db"
-	"github.com/Sakrafux/family-tree/backend/internal/middleware"
-	"github.com/Sakrafux/family-tree/backend/internal/router"
+	"github.com/Sakrafux/family-tree-app/backend/internal/db"
+	"github.com/Sakrafux/family-tree-app/backend/internal/middleware"
+	"github.com/Sakrafux/family-tree-app/backend/internal/router"
 	"github.com/kuzudb/go-kuzu"
 )
 

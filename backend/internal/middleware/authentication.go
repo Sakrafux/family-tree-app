@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/Sakrafux/family-tree/backend/internal/errors"
+	"github.com/Sakrafux/family-tree-app/backend/internal/errors"
 )
 
 func Authentication(next http.Handler) http.Handler {
