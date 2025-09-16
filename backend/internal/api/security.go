@@ -39,7 +39,7 @@ func (h *SecurityHandler) Login(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   false,
 		Path:     "/api/security/token",
-		MaxAge:   3 * 60, // 7 days
+		MaxAge:   30 * 24 * 60 * 60, // 7 days
 		SameSite: http.SameSiteStrictMode,
 	})
 
