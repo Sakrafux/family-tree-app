@@ -148,7 +148,7 @@ func initSqlite(dbPath string, dataPathPrefix string) {
 	dbPathParts := strings.Split(dbPath, "/")
 	migFilePath := strings.Join(dbPathParts[:len(dbPathParts)-1], "/")
 	lastMigration := 0
-	data, err := os.ReadFile(migFilePath + "/migration-version-sql.txt")
+	data, err := os.ReadFile(migFilePath + "/migration-version-sqlite.txt")
 	if err != nil {
 		if !os.IsNotExist(err) {
 			log.Fatal(err)
