@@ -27,7 +27,7 @@ func createUserValues(dataPathPrefix string) string {
 		user := users[i]
 		salt := security.GenerateSalt()
 		password := security.HashPassword(user[1], salt)
-		userInserts[i-1] = fmt.Sprintf("('%s','%s', '%s', '%s')", user[0], password, string(salt), user[2])
+		userInserts[i-1] = fmt.Sprintf("('%s','%s', '%s', '%s', '%s')", user[0], password, string(salt), user[2], user[3])
 	}
 
 	return strings.Join(userInserts, ",")

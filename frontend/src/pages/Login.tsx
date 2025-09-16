@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
+import { useApiFamilyTree } from "@/api/data/FamilyTreeProvider";
 import { useAuth } from "@/api/security/AuthProvider";
 import { useLoading } from "@/components/LoadingProvider";
 
@@ -10,6 +11,7 @@ function Login() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
+    const { clearData } = useApiFamilyTree();
     const {
         login,
         state: { data: token },
@@ -38,12 +40,13 @@ function Login() {
     useEffect(() => {
         if (token && token.expiresAt.getTime() > new Date().getTime()) {
             if (window.history.state && window.history.state.idx > 0) {
+                clearData();
                 navigate(-1);
             } else {
                 navigate("/");
             }
         }
-    }, [token, navigate]);
+    }, [token, navigate, clearData]);
 
     return (
         <main className="full-wo-header-height flex items-center justify-center bg-gray-50">

@@ -9,15 +9,22 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type TokenData struct {
+	Id     int
+	Role   string
+	NodeId string
+}
+
 var accessSecret = []byte(os.Getenv("ACCESS_SECRET"))
 var refreshSecret = []byte(os.Getenv("REFRESH_SECRET"))
 
-func CreateAccessToken(id int, role string) (string, error) {
+func CreateAccessToken(user *TokenData) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id": fmt.Sprintf("%d", id),
+		"user_id": fmt.Sprintf("%d", user.Id),
 		"exp":     time.Now().Add(time.Minute * 1).Unix(),
 		"iat":     time.Now().Unix(),
-		"role":    role,
+		"role":    user.Role,
+		"node_id": user.NodeId,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -25,12 +32,13 @@ func CreateAccessToken(id int, role string) (string, error) {
 	return tokenString, err
 }
 
-func CreateRefreshToken(id int, role string) (string, error) {
+func CreateRefreshToken(user *TokenData) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id": fmt.Sprintf("%d", id),
+		"user_id": fmt.Sprintf("%d", user.Id),
 		"exp":     time.Now().Add(time.Minute * 3).Unix(),
 		"iat":     time.Now().Unix(),
-		"role":    role,
+		"role":    user.Role,
+		"node_id": user.NodeId,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -75,15 +83,19 @@ func ValidateRefreshToken(tokenStr string) (*jwt.Token, error) {
 	return token, nil
 }
 
-func ExtractUserIdAndRole(token *jwt.Token) (int, string, error) {
+func ExtractUserData(token *jwt.Token) (int, string, string, error) {
 	claims := token.Claims.(jwt.MapClaims)
 	userId, err := strconv.Atoi(claims["user_id"].(string))
 	if err != nil {
-		return 0, "", err
+		return 0, "", "", err
 	}
 	role, ok := claims["role"].(string)
 	if !ok {
-		return 0, "", fmt.Errorf("invalid access token")
+		return 0, "", "", fmt.Errorf("invalid access token")
 	}
-	return userId, role, nil
+	nodeId, ok := claims["node_id"].(string)
+	if !ok {
+		return 0, "", "", fmt.Errorf("invalid access token")
+	}
+	return userId, role, nodeId, nil
 }

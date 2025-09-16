@@ -15,4 +15,5 @@ type User struct {
 	Password string
 	Salt     string
 	Role     string
+	NodeId   string
 }

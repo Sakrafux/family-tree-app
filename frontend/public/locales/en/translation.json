@@ -40,7 +40,8 @@
     },
     "api": {
         "403": "Request failed due to insufficient permissions",
-        "401": "Request failed due to not being logged-in"
+        "401": "Request failed due to not being logged-in",
+        "logout": "Login ran out, please login again"
     },
     "login": {
         "heading": "Login",

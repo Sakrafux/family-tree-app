@@ -17,7 +17,14 @@ enum FamilyTreeActions {
     FETCH_SUCCESS = "FETCH_SUCCESS",
     FETCH_ERROR = "FETCH_ERROR",
     CLEAR_ERROR = "CLEAR_ERROR",
+    CLEAR_DATA = "CLEAR_DATA",
 }
+
+const initialState: ApiData<Record<string, FamilyTreeDto>> = {
+    data: undefined,
+    loading: undefined,
+    error: undefined,
+};
 
 function familyTreeReducer(
     state: ApiData<Record<string, FamilyTreeDto>>,
@@ -42,6 +49,8 @@ function familyTreeReducer(
             };
         case FamilyTreeActions.CLEAR_ERROR:
             return { ...state, error: undefined };
+        case FamilyTreeActions.CLEAR_DATA:
+            return { ...initialState };
         default:
             return state;
     }
@@ -52,15 +61,10 @@ type FamilyTreeContextType = {
     state: ApiData<Record<string, FamilyTreeDto>>;
     getFamilyTree: (id: string, distance?: number) => Promise<void>;
     clearError: () => void;
+    clearData: () => void;
 };
 
 const FamilyTreeContext = createContext<FamilyTreeContextType | undefined>(undefined);
-
-const initialState: ApiData<Record<string, FamilyTreeDto>> = {
-    data: undefined,
-    loading: undefined,
-    error: undefined,
-};
 
 export function FamilyTreeProvider({ children }: PropsWithChildren) {
     const [state, dispatch] = useReducer(familyTreeReducer, initialState);
@@ -93,9 +97,11 @@ export function FamilyTreeProvider({ children }: PropsWithChildren) {
 
     const clearError = useCallback(() => dispatch({ type: FamilyTreeActions.CLEAR_ERROR }), []);
 
+    const clearData = useCallback(() => dispatch({ type: FamilyTreeActions.CLEAR_DATA }), []);
+
     const value = useMemo(
-        () => ({ state, getFamilyTree, clearError }),
-        [clearError, getFamilyTree, state],
+        () => ({ state, getFamilyTree, clearError, clearData }),
+        [clearData, clearError, getFamilyTree, state],
     );
 
     return <FamilyTreeContext.Provider value={value}>{children}</FamilyTreeContext.Provider>;

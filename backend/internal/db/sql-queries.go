@@ -67,8 +67,8 @@ func UpdateFeedbackIsResolved(db *sql.DB, id int, isResolved bool) error {
 
 func GetUser(db *sql.DB, username, password string) (*User, error) {
 	user := &User{}
-	err := db.QueryRow("SELECT id, name, password, salt, role FROM users WHERE name = $1", username).Scan(
-		&user.Id, &user.Username, &user.Password, &user.Salt, &user.Role)
+	err := db.QueryRow("SELECT id, name, password, salt, role, node FROM users WHERE name = $1", username).Scan(
+		&user.Id, &user.Username, &user.Password, &user.Salt, &user.Role, &user.NodeId)
 	if err != nil {
 		return nil, err
 	}
@@ -82,8 +82,8 @@ func GetUser(db *sql.DB, username, password string) (*User, error) {
 
 func GetUserById(db *sql.DB, userId int) (*User, error) {
 	user := &User{}
-	err := db.QueryRow("SELECT id, name, password, salt, role FROM users WHERE id = $1", userId).Scan(
-		&user.Id, &user.Username, &user.Password, &user.Salt, &user.Role)
+	err := db.QueryRow("SELECT id, name, password, salt, role, node FROM users WHERE id = $1", userId).Scan(
+		&user.Id, &user.Username, &user.Password, &user.Salt, &user.Role, &user.NodeId)
 	if err != nil {
 		return nil, err
 	}

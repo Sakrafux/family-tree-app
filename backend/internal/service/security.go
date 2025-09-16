@@ -22,11 +22,12 @@ func (s *SecurityService) Login(username, password string) (string, string, erro
 		return "", "", errors.NewUnauthorizedError(err.Error())
 	}
 
-	refreshToken, err := security.CreateRefreshToken(user.Id, user.Role)
+	tokenData := &security.TokenData{Id: user.Id, Role: user.Role, NodeId: user.NodeId}
+	refreshToken, err := security.CreateRefreshToken(tokenData)
 	if err != nil {
 		return "", "", errors.NewInternalServerError(err.Error())
 	}
-	accessToken, err := security.CreateAccessToken(user.Id, user.Role)
+	accessToken, err := security.CreateAccessToken(tokenData)
 	if err != nil {
 		return "", "", errors.NewInternalServerError(err.Error())
 	}
@@ -40,17 +41,18 @@ func (s *SecurityService) RefreshTokens(refreshToken string) (string, string, er
 		return "", "", errors.NewUnauthorizedError(err.Error())
 	}
 
-	userID, role, err := security.ExtractUserIdAndRole(token)
+	userID, role, nodeId, err := security.ExtractUserData(token)
+	if err != nil {
+		return "", "", errors.NewInternalServerError(err.Error())
+	}
+	tokenData := &security.TokenData{Id: userID, Role: role, NodeId: nodeId}
+
+	rt, err := security.CreateRefreshToken(tokenData)
 	if err != nil {
 		return "", "", errors.NewInternalServerError(err.Error())
 	}
 
-	rt, err := security.CreateRefreshToken(userID, role)
-	if err != nil {
-		return "", "", errors.NewInternalServerError(err.Error())
-	}
-
-	at, err := security.CreateAccessToken(userID, role)
+	at, err := security.CreateAccessToken(tokenData)
 	if err != nil {
 		return "", "", errors.NewInternalServerError(err.Error())
 	}

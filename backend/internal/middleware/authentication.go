@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/Sakrafux/family-tree-app/backend/internal/constants"
 	"github.com/Sakrafux/family-tree-app/backend/internal/db"
 	"github.com/Sakrafux/family-tree-app/backend/internal/errors"
 	"github.com/Sakrafux/family-tree-app/backend/internal/security"
@@ -28,7 +29,7 @@ func Authentication(sqlDb *sql.DB) func(next http.Handler) http.Handler {
 				return
 			}
 
-			userId, _, err := security.ExtractUserIdAndRole(token)
+			userId, _, _, err := security.ExtractUserData(token)
 			if err != nil {
 				errors.HandleHttpError(w, r, errors.NewInternalServerError(err.Error()))
 				return
@@ -42,9 +43,10 @@ func Authentication(sqlDb *sql.DB) func(next http.Handler) http.Handler {
 
 			permissions := security.GetPermissionsForRole(user.Role)
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, "username", user.Username)
-			ctx = context.WithValue(ctx, "role", user.Role)
-			ctx = context.WithValue(ctx, "permissions", permissions)
+			ctx = context.WithValue(ctx, constants.AUTH_CONTEXT_USERNAME, user.Username)
+			ctx = context.WithValue(ctx, constants.AUTH_CONTEXT_ROLE, user.Role)
+			ctx = context.WithValue(ctx, constants.AUTH_CONTEXT_PERMISSIONS, permissions)
+			ctx = context.WithValue(ctx, constants.AUTH_CONTEXT_NODE, user.NodeId)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

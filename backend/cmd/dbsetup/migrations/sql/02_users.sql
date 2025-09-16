@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT NOT NULL,
     password TEXT NOT NULL,
     salt BLOB NOT NULL,
-    role TEXT NOT NULL
+    role TEXT NOT NULL,
+    node TEXT NOT NULL
 );
 
-INSERT INTO users(name, password, salt, role) VALUES ${users};
+INSERT INTO users(name, password, salt, role, node) VALUES ${users};

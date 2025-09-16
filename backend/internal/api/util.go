@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Sakrafux/family-tree-app/backend/internal/constants"
 	"github.com/Sakrafux/family-tree-app/backend/internal/errors"
 )
 
@@ -37,7 +38,7 @@ var dummyData = map[string]bool{
 }
 
 func allowDummyDataForUnauthorized(r *http.Request, id string) error {
-	if r.Context().Value("role") != nil || dummyData[id] {
+	if r.Context().Value(constants.AUTH_CONTEXT_ROLE) != nil || dummyData[id] {
 		return nil
 	}
 	return errors.NewForbiddenError("Insufficient privileges")

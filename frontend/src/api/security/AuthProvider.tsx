@@ -17,7 +17,7 @@ enum AuthActions {
     ERROR = "ERROR",
 }
 
-type AuthData = { token: string; expiresAt: Date; role: string };
+type AuthData = { token: string; expiresAt: Date; role: string; nodeId: string };
 type AuthState = ApiData<AuthData>;
 
 function authReducer(state: AuthState, action: ContextAction<AuthData, AuthActions>): AuthState {
@@ -60,6 +60,7 @@ const initialState: AuthState = {
                 token: token,
                 expiresAt: new Date(jwt.payload.exp * 1000),
                 role: jwt.payload.role,
+                nodeId: jwt.payload["node_id"],
             };
         } else {
             return undefined;
@@ -90,6 +91,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
                     token: rawData.AccessToken,
                     expiresAt: new Date(jwt.payload.exp * 1000),
                     role: jwt.payload.role,
+                    nodeId: jwt.payload["node_id"],
                 };
 
                 dispatch({ type: AuthActions.RESULT, payload: data });
@@ -114,6 +116,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
                 token: rawData.AccessToken,
                 expiresAt: new Date(jwt.payload.exp * 1000),
                 role: jwt.payload.role,
+                nodeId: jwt.payload["node_id"],
             };
 
             dispatch({ type: AuthActions.RESULT, payload: data });
