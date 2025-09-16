@@ -3,6 +3,8 @@ package middleware
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/Sakrafux/family-tree-app/backend/internal/constants"
@@ -47,6 +49,8 @@ func Authentication(sqlDb *sql.DB) func(next http.Handler) http.Handler {
 			ctx = context.WithValue(ctx, constants.AUTH_CONTEXT_ROLE, user.Role)
 			ctx = context.WithValue(ctx, constants.AUTH_CONTEXT_PERMISSIONS, permissions)
 			ctx = context.WithValue(ctx, constants.AUTH_CONTEXT_NODE, user.NodeId)
+
+			log.Println(fmt.Sprintf("Authenticated as '%s' with role '%s'", user.Username, user.Role))
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
