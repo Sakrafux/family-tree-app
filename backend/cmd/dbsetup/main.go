@@ -70,8 +70,10 @@ func initKuzu(dbPath string, dataPathPrefix string) {
 		log.Fatal(err)
 	}
 
+	dbPathParts := strings.Split(dbPath, "/")
+	migFilePath := strings.Join(dbPathParts[:len(dbPathParts)-1], "/")
 	lastMigration := 0
-	data, err := os.ReadFile("migration-version-kuzu.txt")
+	data, err := os.ReadFile(migFilePath + "/migration-version-kuzu.txt")
 	if err != nil {
 		if !os.IsNotExist(err) {
 			log.Fatal(err)
@@ -114,7 +116,7 @@ func initKuzu(dbPath string, dataPathPrefix string) {
 		defer queryResult.Close()
 		log.Println("[kuzu] Applied " + fileName)
 
-		err = os.WriteFile("migration-version-kuzu.txt", []byte(fmt.Sprintf("%d", key)), 0644)
+		err = os.WriteFile(migFilePath+"/migration-version-kuzu.txt", []byte(fmt.Sprintf("%d", key)), 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -143,8 +145,10 @@ func initSqlite(dbPath string, dataPathPrefix string) {
 		log.Fatal(err)
 	}
 
+	dbPathParts := strings.Split(dbPath, "/")
+	migFilePath := strings.Join(dbPathParts[:len(dbPathParts)-1], "/")
 	lastMigration := 0
-	data, err := os.ReadFile("migration-version-sql.txt")
+	data, err := os.ReadFile(migFilePath + "/migration-version-sql.txt")
 	if err != nil {
 		if !os.IsNotExist(err) {
 			log.Fatal(err)
@@ -187,7 +191,7 @@ func initSqlite(dbPath string, dataPathPrefix string) {
 		}
 		log.Println("[sqlite] Applied " + fileName)
 
-		err = os.WriteFile("migration-version-sqlite.txt", []byte(fmt.Sprintf("%d", key)), 0644)
+		err = os.WriteFile(migFilePath+"/migration-version-sqlite.txt", []byte(fmt.Sprintf("%d", key)), 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
