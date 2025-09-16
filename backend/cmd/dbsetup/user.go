@@ -11,7 +11,7 @@ import (
 )
 
 func createUserValues(dataPathPrefix string) string {
-	userFile, err := os.Open(dataPathPrefix + "/users.csv")
+	userFile, err := os.Open(publicOrPrivateData(dataPathPrefix) + "/users.csv")
 	if err != nil {
 		log.Fatal(err)
 	}

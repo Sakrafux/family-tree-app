@@ -79,3 +79,14 @@ func GetUser(db *sql.DB, username, password string) (*User, error) {
 
 	return nil, fmt.Errorf("invalid username or password")
 }
+
+func GetUserById(db *sql.DB, userId int) (*User, error) {
+	user := &User{}
+	err := db.QueryRow("SELECT id, name, password, salt, role FROM users WHERE id = $1", userId).Scan(
+		&user.Id, &user.Username, &user.Password, &user.Salt, &user.Role)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}

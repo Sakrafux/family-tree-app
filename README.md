@@ -34,29 +34,17 @@ Key aspects:
 
 ## Deployment
 
-Deployment is designed to be simple and containerized:
+Deployment is designed to be simple and containerized using docker and docker-compose:
 
-1.  **Build the frontend bundle**:
+``` bash
+cd docker
+docker-compose up --build
+```
 
-    ``` bash
-    cd frontend
-    npm install
-    npm run build
-    ```
+The Go webserver will:
 
-    This generates a static bundle that can be served by the Go backend.
-
-2.  **Start the application with Docker Compose**:
-
-    ``` bash
-    cd docker
-    docker-compose up --build
-    ```
-
-    The Go webserver will:
-
-    -   Serve the **compiled frontend bundle** as static assets.
-    -   Handle API requests and database access.
+-   Serve the **compiled frontend bundle** as static assets.
+-   Handle API requests and database access.
 
 This makes the entire application self-contained, requiring only Docker to run.
 
@@ -74,9 +62,9 @@ This makes the entire application self-contained, requiring only Docker to run.
 
 ### General Features
 
-- [ ] **User Authentication**
-    - [ ] Required for real data
-    - [ ] Anonymous users default to dummy data
+- [x] **User Authentication**
+    - [x] Required for real data
+    - [x] Anonymous users default to dummy data
 
 - [ ] **RBAC**
   - [ ] Add various permissions
@@ -130,3 +118,5 @@ This makes the entire application self-contained, requiring only Docker to run.
 
 - [ ] **Export Data as CSV**
   - Allow for exporting all the data in the graph database as CSVs
+
+- [ ] **GitHub Link**

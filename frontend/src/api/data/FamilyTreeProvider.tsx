@@ -16,6 +16,7 @@ enum FamilyTreeActions {
     FETCH_START = "FETCH_START",
     FETCH_SUCCESS = "FETCH_SUCCESS",
     FETCH_ERROR = "FETCH_ERROR",
+    CLEAR_ERROR = "CLEAR_ERROR",
 }
 
 function familyTreeReducer(
@@ -39,6 +40,8 @@ function familyTreeReducer(
                 loading: false,
                 error: action.error,
             };
+        case FamilyTreeActions.CLEAR_ERROR:
+            return { ...state, error: undefined };
         default:
             return state;
     }
@@ -48,6 +51,7 @@ type FamilyTreeContextType = {
     // Cache all queried family trees in a map by their id
     state: ApiData<Record<string, FamilyTreeDto>>;
     getFamilyTree: (id: string, distance?: number) => Promise<void>;
+    clearError: () => void;
 };
 
 const FamilyTreeContext = createContext<FamilyTreeContextType | undefined>(undefined);
@@ -87,7 +91,12 @@ export function FamilyTreeProvider({ children }: PropsWithChildren) {
         [api, showToast, state.data, t],
     );
 
-    const value = useMemo(() => ({ state, getFamilyTree: getFamilyTree }), [getFamilyTree, state]);
+    const clearError = useCallback(() => dispatch({ type: FamilyTreeActions.CLEAR_ERROR }), []);
+
+    const value = useMemo(
+        () => ({ state, getFamilyTree, clearError }),
+        [clearError, getFamilyTree, state],
+    );
 
     return <FamilyTreeContext.Provider value={value}>{children}</FamilyTreeContext.Provider>;
 }

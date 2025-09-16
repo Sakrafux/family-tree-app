@@ -15,7 +15,8 @@ func CreaterRouter(kuzuConn *kuzu.Connection, sqlDb *sql.DB) *AuthServeMux {
 	apiHandler := api.NewHandler(kuzuConn, sqlDb)
 	apiRouter := NewAuthServeMux()
 
-	apiRouter.HandleFunc("GET /family-tree/{id}", apiHandler.GetFamilyTree, constants.AUTH_PERMISSION_READ)
+	apiRouter.HandleFunc("GET /family-tree/{id}", apiHandler.GetFamilyTree)
+	apiRouter.HandleFunc("OPTIONS /family-tree/{id}", nullHandler)
 	apiRouter.HandleFunc("GET /feedbacks", apiHandler.GetAllFeedbacks, constants.AUTH_PERMISSION_ADMIN)
 	apiRouter.HandleFunc("POST /feedbacks", apiHandler.PostFeedback, constants.AUTH_PERMISSION_ADMIN)
 	apiRouter.HandleFunc("OPTIONS /feedbacks", nullHandler)
@@ -25,6 +26,7 @@ func CreaterRouter(kuzuConn *kuzu.Connection, sqlDb *sql.DB) *AuthServeMux {
 	router.Handle("/", apiRouter)
 
 	router.Handle("/public/", http.StripPrefix("/public", createPublicRouter()))
+	router.Handle("/security/", http.StripPrefix("/security", createSecurityRouter(sqlDb)))
 
 	routerWrapper := NewAuthServeMux()
 	routerWrapper.Handle("/api/", http.StripPrefix("/api", router))
@@ -40,6 +42,17 @@ func createPublicRouter() *AuthServeMux {
 	})
 
 	return publicRouter
+}
+
+func createSecurityRouter(sqlDb *sql.DB) *AuthServeMux {
+	securityHandler := api.NewSecurityHandler(sqlDb)
+	securityRouter := NewAuthServeMux()
+
+	securityRouter.HandleFunc("POST /login", securityHandler.Login)
+	securityRouter.HandleFunc("OPTIONS /login", nullHandler)
+	securityRouter.HandleFunc("GET /token", securityHandler.RefreshToken)
+
+	return securityRouter
 }
 
 func nullHandler(w http.ResponseWriter, r *http.Request) {

@@ -47,3 +47,7 @@ export type FeedbackDto = {
     Timestamp: string;
     IsResolved: boolean;
 };
+
+export type AccessTokenDto = {
+    AccessToken: string;
+};

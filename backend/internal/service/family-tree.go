@@ -13,15 +13,15 @@ import (
 	"github.com/samber/lo"
 )
 
-type GraphService struct {
+type FamilyTreeService struct {
 	conn *kuzu.Connection
 }
 
-func NewGraphService(conn *kuzu.Connection) *GraphService {
-	return &GraphService{conn: conn}
+func NewFamilyTreeService(conn *kuzu.Connection) *FamilyTreeService {
+	return &FamilyTreeService{conn: conn}
 }
 
-func (s *GraphService) GetFamilyTree(id uuid.UUID, maxDistance int) (*FamilyTreeDto, error) {
+func (s *FamilyTreeService) GetFamilyTree(id uuid.UUID, maxDistance int) (*FamilyTreeDto, error) {
 	chPersons, chDistances, chMarriageRelations, chParentRelations, chSiblingRelations, err := queryDbInParallel(s.conn, id)
 	if err != nil {
 		return nil, err

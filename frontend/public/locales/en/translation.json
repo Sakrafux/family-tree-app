@@ -6,7 +6,8 @@
         "heading": "Family Tree",
         "home": "Family Tree",
         "feedback": "Feedback",
-        "log-in": "Log in"
+        "log-in": "Log in",
+        "log-out": "Log out"
     },
     "feedback": {
         "page": {
@@ -36,5 +37,18 @@
             "birthday": "Birthday",
             "deathday": "Deathday"
         }
+    },
+    "api": {
+        "403": "Request failed due to insufficient permissions",
+        "401": "Request failed due to not being logged-in"
+    },
+    "login": {
+        "heading": "Login",
+        "error-incomplete": "Please fill out all fields",
+        "error-failed": "Login failed",
+        "username": "Username",
+        "username-placeholder": "john-smith",
+        "password": "Password",
+        "sign-in": "Sign in"
     }
 }

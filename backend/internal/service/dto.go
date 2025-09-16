@@ -47,3 +47,12 @@ type PatchFeedbackResolveRequest struct {
 type FeedbackDto struct {
 	*db.Feedback
 }
+
+type LoginRequest struct {
+	Username string
+	Password string
+}
+
+type AccessTokenDto struct {
+	AccessToken string
+}

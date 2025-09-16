@@ -13,22 +13,28 @@ import (
 func Authentication(sqlDb *sql.DB) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// TODO proper user data with JWT
-			username := ""
-			password := ""
-			if queryUsername, ok := r.URL.Query()["username"]; ok {
-				username = queryUsername[0]
-			}
-			if queryPassword, ok := r.URL.Query()["password"]; ok {
-				password = queryPassword[0]
-			}
-
-			if username == "" {
+			auth := r.Header.Get("Authorization")
+			tokenString := ""
+			if len(auth) > 7 && auth[:7] == "Bearer " {
+				tokenString = auth[7:]
+			} else {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			user, err := db.GetUser(sqlDb, username, password)
+			token, err := security.ValidateAccessToken(tokenString)
+			if err != nil {
+				errors.HandleHttpError(w, r, errors.NewUnauthorizedError(err.Error()))
+				return
+			}
+
+			userId, _, err := security.ExtractUserIdAndRole(token)
+			if err != nil {
+				errors.HandleHttpError(w, r, errors.NewInternalServerError(err.Error()))
+				return
+			}
+
+			user, err := db.GetUserById(sqlDb, userId)
 			if err != nil {
 				errors.HandleHttpError(w, r, errors.NewUnauthorizedError(err.Error()))
 				return
@@ -36,7 +42,7 @@ func Authentication(sqlDb *sql.DB) func(next http.Handler) http.Handler {
 
 			permissions := security.GetPermissionsForRole(user.Role)
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, "username", username)
+			ctx = context.WithValue(ctx, "username", user.Username)
 			ctx = context.WithValue(ctx, "role", user.Role)
 			ctx = context.WithValue(ctx, "permissions", permissions)
 

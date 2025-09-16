@@ -14,16 +14,18 @@ import (
 )
 
 type Handler struct {
-	conn            *kuzu.Connection
-	graphService    *service.GraphService
-	feedbackService *service.FeedbackService
+	conn              *kuzu.Connection
+	familyTreeService *service.FamilyTreeService
+	feedbackService   *service.FeedbackService
+	securityService   *service.SecurityService
 }
 
 func NewHandler(kuzuConn *kuzu.Connection, sqlDb *sql.DB) *Handler {
 	return &Handler{
-		conn:            kuzuConn,
-		graphService:    service.NewGraphService(kuzuConn),
-		feedbackService: service.NewFeedbackService(sqlDb),
+		conn:              kuzuConn,
+		familyTreeService: service.NewFamilyTreeService(kuzuConn),
+		feedbackService:   service.NewFeedbackService(sqlDb),
+		securityService:   service.NewSecurityService(sqlDb),
 	}
 }
 
@@ -42,7 +44,11 @@ func (h *Handler) GetFamilyTree(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	data, err := h.graphService.GetFamilyTree(id, distance)
+	if err = allowDummyDataForUnauthorized(r, r.PathValue("id")); err != nil {
+		errors.HandleHttpError(w, r, err)
+	}
+
+	data, err := h.familyTreeService.GetFamilyTree(id, distance)
 	if err != nil {
 		errors.HandleHttpError(w, r, err)
 		return

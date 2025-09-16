@@ -18,6 +18,7 @@ enum FeedbackActions {
     POST_SUCCESS = "POST_SUCCESS",
     PATCH_SUCCESS = "PATCH_SUCCESS",
     QUERY_ERROR = "QUERY_ERROR",
+    CLEAR_ERROR = "CLEAR_ERROR",
 }
 
 function feedbackReducer(
@@ -60,8 +61,11 @@ function feedbackReducer(
         case FeedbackActions.QUERY_ERROR:
             return {
                 ...state,
+                loading: false,
                 error: action.error,
             };
+        case FeedbackActions.CLEAR_ERROR:
+            return { ...state, error: undefined };
         default:
             return state;
     }
@@ -72,6 +76,7 @@ type FeedbackContextType = {
     getAllFeedbacks: () => Promise<void>;
     postFeedback: (text: string) => Promise<void>;
     patchFeedbackResolve: (id: number, isResolved: boolean) => Promise<void>;
+    clearError: () => void;
 };
 
 const FeedbackContext = createContext<FeedbackContextType | undefined>(undefined);
@@ -137,9 +142,11 @@ export function FeedbackProvider({ children }: PropsWithChildren) {
         [api, showToast, t],
     );
 
+    const clearError = useCallback(() => dispatch({ type: FeedbackActions.CLEAR_ERROR }), []);
+
     const value = useMemo(
-        () => ({ state, getAllFeedbacks, postFeedback, patchFeedbackResolve }),
-        [getAllFeedbacks, patchFeedbackResolve, postFeedback, state],
+        () => ({ state, getAllFeedbacks, postFeedback, patchFeedbackResolve, clearError }),
+        [clearError, getAllFeedbacks, patchFeedbackResolve, postFeedback, state],
     );
 
     return <FeedbackContext.Provider value={value}>{children}</FeedbackContext.Provider>;

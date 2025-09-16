@@ -5,7 +5,7 @@ import { useApiFeedback } from "@/api/data/FeedbackProvider";
 import { useLoading } from "@/components/LoadingProvider";
 
 function Feedback() {
-    const { state, getAllFeedbacks, patchFeedbackResolve } = useApiFeedback();
+    const { state, getAllFeedbacks, patchFeedbackResolve, clearError } = useApiFeedback();
     const { showLoading, hideLoading } = useLoading();
     const { t } = useTranslation();
 
@@ -28,13 +28,17 @@ function Feedback() {
     }, [state]);
 
     useEffect(() => {
-        if (state.data == null) {
+        if (state.data == null && !state.loading && !state.error) {
             showLoading();
             getAllFeedbacks().then(() => hideLoading());
         }
-    }, [getAllFeedbacks, hideLoading, showLoading, state.data]);
+    }, [getAllFeedbacks, hideLoading, showLoading, state]);
 
-    if (state.loading !== false) return null;
+    useEffect(() => {
+        clearError();
+    }, [clearError]);
+
+    if (state.data == null) return null;
 
     if (feedbacks.length === 0) {
         return (

@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 
-import AvatarSvg from "@/assets/avatar.svg?react";
-import BellSvg from "@/assets/bell.svg?react";
+import { useAuth } from "@/api/security/AuthProvider";
 import { useLoading } from "@/components/LoadingProvider";
 
 const linkBaseClasses = "text-gray-600 hover:text-gray-900";
@@ -10,8 +9,10 @@ const linkActiveClasses =
     "text-gray-900 underline underline-offset-4 underline-gray-900 decoration-2";
 
 function Header() {
-    // TODO properly load log-in information
-    const isLoggedIn = false;
+    const {
+        logout,
+        state: { data: token },
+    } = useAuth();
 
     const { showLoading, hideLoading } = useLoading();
     const { t, i18n } = useTranslation();
@@ -32,32 +33,36 @@ function Header() {
                     >
                         {t("header.home")}
                     </NavLink>
-                    <NavLink
-                        to="/feedback"
-                        className={({ isActive }) =>
-                            `${linkBaseClasses} ${isActive ? linkActiveClasses : ""}`
-                        }
-                    >
-                        {t("header.feedback")}
-                    </NavLink>
+                    {token?.role === "admin" && (
+                        <NavLink
+                            to="/feedback"
+                            className={({ isActive }) =>
+                                `${linkBaseClasses} ${isActive ? linkActiveClasses : ""}`
+                            }
+                        >
+                            {t("header.feedback")}
+                        </NavLink>
+                    )}
                 </nav>
 
                 <div className="flex items-center space-x-4">
-                    {isLoggedIn ? (
-                        <>
-                            <button className="cursor-pointer p-1 text-gray-600 hover:text-gray-900">
-                                <BellSvg className="h-6 w-6" />
-                            </button>
-                            <button className="h-8 w-8 cursor-pointer">
-                                <AvatarSvg />
-                            </button>
-                        </>
+                    {token ? (
+                        <button
+                            onClick={async () => {
+                                await logout();
+                                window.location.reload();
+                            }}
+                            className="cursor-pointer border border-gray-900 bg-white px-5 py-1 font-medium text-gray-900 transition-colors duration-200 hover:bg-gray-600 hover:text-white active:bg-gray-800"
+                        >
+                            {t("header.log-out")}
+                        </button>
                     ) : (
-                        <>
-                            <button className="cursor-pointer border border-gray-900 bg-white px-5 py-1 font-medium text-gray-900 transition-colors duration-200 hover:bg-gray-600 hover:text-white active:bg-gray-800">
-                                {t("header.log-in")}
-                            </button>
-                        </>
+                        <NavLink
+                            to="/login"
+                            className="cursor-pointer border border-gray-900 bg-white px-5 py-1 font-medium text-gray-900 transition-colors duration-200 hover:bg-gray-600 hover:text-white active:bg-gray-800"
+                        >
+                            {t("header.log-in")}
+                        </NavLink>
                     )}
                 </div>
             </div>
