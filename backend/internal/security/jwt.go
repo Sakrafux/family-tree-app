@@ -21,7 +21,7 @@ var refreshSecret = []byte(os.Getenv("REFRESH_SECRET"))
 func CreateAccessToken(user *TokenData) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": fmt.Sprintf("%d", user.Id),
-		"exp":     time.Now().Add(time.Minute * 1).Unix(),
+		"exp":     time.Now().Add(time.Minute * 15).Unix(),
 		"iat":     time.Now().Unix(),
 		"role":    user.Role,
 		"node_id": user.NodeId,
@@ -35,7 +35,7 @@ func CreateAccessToken(user *TokenData) (string, error) {
 func CreateRefreshToken(user *TokenData) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": fmt.Sprintf("%d", user.Id),
-		"exp":     time.Now().Add(time.Minute * 3).Unix(),
+		"exp":     time.Now().Add(time.Hour * 24 * 30).Unix(),
 		"iat":     time.Now().Unix(),
 		"role":    user.Role,
 		"node_id": user.NodeId,

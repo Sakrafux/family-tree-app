@@ -67,7 +67,7 @@ func (h *SecurityHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   false, // bad for local development
 		Path:     "/api/security/token",
-		MaxAge:   3 * 60, // 7 days
+		MaxAge:   30 * 24 * 60 * 60, // 30 days
 		SameSite: http.SameSiteStrictMode,
 	})
 
