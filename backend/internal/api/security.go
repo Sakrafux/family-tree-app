@@ -34,7 +34,7 @@ func (h *SecurityHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
+		Name:     "family_tree-refresh_token",
 		Value:    rt,
 		HttpOnly: true,
 		Secure:   false,
@@ -48,7 +48,7 @@ func (h *SecurityHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SecurityHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("refresh_token")
+	cookie, err := r.Cookie("family_tree-refresh_token")
 	if err != nil {
 		errors.HandleHttpError(w, r, errors.NewBadRequestError(err.Error()))
 		return
@@ -62,7 +62,7 @@ func (h *SecurityHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
+		Name:     "family_tree-refresh_token",
 		Value:    rt,
 		HttpOnly: true,
 		Secure:   false, // bad for local development
