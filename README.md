@@ -62,16 +62,6 @@ This makes the entire application self-contained, requiring only Docker to run.
 
 ### General Features
 
-- [x] **User Authentication**
-    - [x] Required for real data
-    - [x] Anonymous users default to dummy data
-
-- [ ] **RBAC**
-  - [ ] Add various permissions
-    - [ ] User -- can view and change data for himself, pending review
-    - [ ] Admin -- can manage feedback and review/accept data changes
-  - [ ] First iteration with read-only users and writing admins
-
 - [x] **Database Migration Support**
     - [x] Add schema migration tooling for SQLite + KuzuDB
     - [x] Versioned upgrade scripts
@@ -104,6 +94,9 @@ This makes the entire application self-contained, requiring only Docker to run.
         - [ ] Notes or stories
         - [ ] Multiple photos
 
+- [ ] **Undo/Redo**
+  - via Stack
+
 ### Views
 
 - [ ] **Search View**
@@ -114,9 +107,26 @@ This makes the entire application self-contained, requiring only Docker to run.
     - Overlay family members on a world map (Leaflet/Mapbox)
     - Cluster relatives by city or region
 
+### User Management
+
+- [x] **User Authentication**
+    - [x] Required for real data
+    - [x] Anonymous users default to dummy data
+
+- [ ] **RBAC**
+    - [ ] Add various permissions
+        - [ ] User -- can view and change data for himself, pending review
+        - [ ] Admin -- can manage feedback and review/accept data changes
+    - [ ] First iteration with read-only users and writing admins
+
+- [ ] **Temporary Accounts**
+  - [ ] Temporary workspace without proper access to anything else
+
 ### Miscellaneous
 
 - [ ] **Export Data as CSV**
   - Allow for exporting all the data in the graph database as CSVs
 
 - [ ] **GitHub Link**
+
+- [ ] **Better mobile performance**
